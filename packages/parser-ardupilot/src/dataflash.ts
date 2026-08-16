@@ -132,11 +132,7 @@ function decodeFormatRecord(bytes: Uint8Array, offset: number): MessageFormat {
   return Object.freeze({ type, length, name, format, labels, fieldChars });
 }
 
-function decodeRecord(
-  view: DataView,
-  offset: number,
-  messageFormat: MessageFormat,
-): DecodedRecord {
+function decodeRecord(view: DataView, offset: number, messageFormat: MessageFormat): DecodedRecord {
   const fields = new Map<string, FieldValue>();
   let cursor = offset + PACKET_HEADER_SIZE;
 

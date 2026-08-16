@@ -231,6 +231,7 @@ describe('the repository itself obeys the manifest', () => {
       '@pandalog/core-domain',
       '@pandalog/ingestion',
       '@pandalog/parser-ardupilot',
+      '@pandalog/query',
       '@pandalog/schema',
     ]);
   });

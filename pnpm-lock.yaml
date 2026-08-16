@@ -63,6 +63,15 @@ importers:
         specifier: workspace:*
         version: link:../schema
 
+  packages/query:
+    dependencies:
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/schema: {}
 
 packages:

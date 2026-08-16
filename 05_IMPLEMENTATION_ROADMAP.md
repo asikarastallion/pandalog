@@ -1,7 +1,7 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A — complete.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A, B, C — complete; D next.**
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -61,13 +61,14 @@ character. Validation against a real `.BIN` from a vehicle remains outstanding �
 
 **Delivers:**
 
-- Binary DataFlash (`.bin`) reader: FMT/message-table parsing, message decoding by declared
+- Binary DataFlash (`.BIN`) reader: FMT/message-table parsing, message decoding by declared
   field layout, timestamp extraction.
 - ~~Legacy text `.log` support~~ — confirmed out of scope, ADR-0009.
 - Adapter implementing `ParserAdapter`, producing a validated `CanonicalFlightDataset`.
-- Golden fixtures: at least 3 real or representative ArduPilot logs (nominal flight, a log with
-  GPS glitches/missing sections, a log with an in-flight mode change and an error message)
-  under `fixtures/ardupilot/`, each with expected canonical output.
+- Golden fixtures: 3 representative ArduPilot logs (nominal flight, a log with GPS glitches and a
+  declared-but-unlogged message type, a log with an in-flight mode change and an error message)
+  under `fixtures/ardupilot/`, each with expected canonical output. Synthetic — see the limitation
+  note above.
 
 **Acceptance:**
 
@@ -79,7 +80,11 @@ character. Validation against a real `.BIN` from a vehicle remains outstanding �
 
 ---
 
-## Phase C — Query + Signals
+## Phase C — Query + Signals ✅ complete
+
+Verified 2026-08-16: `pnpm verify` green, 379 tests. The acceptance criterion is a property test
+over invariants 1a/1b across 300 randomised signal/grid combinations, plus a second property that
+interpolation never produces a value outside its supporting samples' range.
 
 **Package:** `@pandalog/query`
 
