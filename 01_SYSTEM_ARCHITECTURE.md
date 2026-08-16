@@ -88,11 +88,15 @@ Authoritative machine-readable form: `docs/architecture/dependency-layers.json`.
 | 5     | `@pandalog/events`           | schema, core-domain, query                                 | D     |
 | 6     | `@pandalog/analysis`         | schema, core-domain, query, events                         | E     |
 | 7     | `@pandalog/verification`     | schema, core-domain, query, events, analysis               | F     |
-| 8     | `@pandalog/cli`              | everything through reporting                               | G     |
-| 8     | `apps/web`                   | everything through reporting                               | H     |
 | 9     | `@pandalog/comparison`       | schema, core-domain, query, events, analysis, verification | J     |
-| 9     | `@pandalog/reporting`        | schema, core-domain, analysis, verification, comparison    | K     |
+| 10    | `@pandalog/reporting`        | schema, core-domain, analysis, verification, comparison    | K     |
 | 10    | `@pandalog/ai`               | schema, analysis, verification, comparison                 | L     |
+| 11    | `@pandalog/cli`              | everything through reporting                               | G     |
+| 11    | `apps/web`                   | everything through reporting                               | H     |
+
+Layer number expresses dependency direction, not roadmap order. `cli` and `web` are introduced in
+phases G and H but sit at the top of the graph because they consume `reporting`, which is built in
+phase K; `introducedInPhase` is the field that records build order. See ADR-0008.
 
 Rules (enforced by test, see §5):
 

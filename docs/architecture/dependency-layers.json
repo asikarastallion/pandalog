@@ -86,7 +86,7 @@
       "introducedInPhase": "F"
     },
     {
-      "layer": 8,
+      "layer": 11,
       "package": "@pandalog/cli",
       "path": "packages/cli",
       "responsibility": "Headless command-line execution of ingestion, analysis, verification, and report generation.",
@@ -105,7 +105,7 @@
       "introducedInPhase": "G"
     },
     {
-      "layer": 8,
+      "layer": 11,
       "package": "@pandalog/web",
       "path": "apps/web",
       "responsibility": "Vue application: investigation workspace, plots, map/3D, comparison, report preview. Consumes application services only.",
@@ -140,7 +140,7 @@
       "introducedInPhase": "J"
     },
     {
-      "layer": 9,
+      "layer": 10,
       "package": "@pandalog/reporting",
       "path": "packages/reporting",
       "responsibility": "Renders structured analysis/verification/comparison artifacts into reproducible report documents. Performs no calculation.",

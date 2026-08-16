@@ -23,9 +23,17 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A — Foundation, complete.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A — Foundation, complete;
+B — ArduPilot DataFlash, next.**
+
+Phase A means the three foundation packages exist, are tested, and are enforced: `pnpm verify` is
+green and the architecture test fails the build on an upward dependency, an undeclared import, or
+a `node:` import inside a package that must stay platform neutral.
+
 There is no UI, CLI, or analysis engine yet — those are phases H, G, and E, and building them
-before the data contracts were settled is exactly what the architecture forbids.
+before the data contracts were settled is exactly what the architecture forbids. Nothing can read
+a real ArduPilot log yet either; that is Phase B, which is the first adapter written against the
+contract in `@pandalog/ingestion`.
 
 | Package                                         | Layer | Responsibility                                                                 | Phase |
 | ----------------------------------------------- | ----- | ------------------------------------------------------------------------------ | ----- |
@@ -37,11 +45,14 @@ before the data contracts were settled is exactly what the architecture forbids.
 | `@pandalog/events`                              | 5     | Flight event detection.                                                        | D     |
 | `@pandalog/analysis`                            | 6     | Deterministic rules → evidence-backed findings.                                | E     |
 | `@pandalog/verification`                        | 7     | Requirement definitions and evaluation.                                        | F     |
-| `@pandalog/cli`                                 | 8     | Headless ingest → analyze → verify → report.                                   | G     |
-| `apps/web`                                      | 8     | Vue investigation workspace.                                                   | H     |
 | `@pandalog/comparison`                          | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
-| `@pandalog/reporting`                           | 9     | Reproducible report rendering (no calculation).                                | K     |
+| `@pandalog/reporting`                           | 10    | Reproducible report rendering (no calculation).                                | K     |
 | `@pandalog/ai`                                  | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
+| `@pandalog/cli`                                 | 11    | Headless ingest → analyze → verify → report.                                   | G     |
+| `apps/web`                                      | 11    | Vue investigation workspace.                                                   | H     |
+
+Layer number orders dependencies, not build order: `cli` and `web` arrive in phases G and H but
+sit at the top because they consume everything beneath them (ADR-0008).
 
 Every package's permitted dependencies are declared in
 [`docs/architecture/dependency-layers.json`](docs/architecture/dependency-layers.json) and
