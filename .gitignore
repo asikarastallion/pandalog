@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output (doc 04 §10: no generated output committed)
+dist/
+*.tsbuildinfo
+
+# Test / coverage output
+coverage/
+.vitest/
+
+# Editor / OS
+# .vscode holds machine-local ROS2/C++ IntelliSense state carried over from another workspace
+# (absolute paths into ~/Documents/argaz/ardu_ws) plus a multi-GB browse database. None of it
+# describes this repository, so none of it is tracked.
+.vscode/
+.DS_Store
+*.swp
+
+# Local environment
+.env
+.env.*
+!.env.example

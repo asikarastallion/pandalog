@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+.vscode
+
+# Source-of-truth specification documents (CLAUDE.md, doc 04 §11). These are the contract; they
+# are amended deliberately as part of a change, never reflowed by a formatter.
+01_SYSTEM_ARCHITECTURE.md
+02_CANONICAL_DATA_MODEL.md
+03_ANALYSIS_AND_VERIFICATION.md
+04_CLAUDE_CODE_ENGINEERING_CONTRACT.md
+05_IMPLEMENTATION_ROADMAP.md
+CLAUDE.md

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "files": [],
+  "references": [
+    { "path": "./packages/schema" },
+    { "path": "./packages/core-domain" },
+    { "path": "./packages/ingestion" }
+  ]
+}
