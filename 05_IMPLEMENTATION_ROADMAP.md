@@ -1,7 +1,7 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-D complete; E next.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-E complete; F next.**
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -134,7 +134,16 @@ event payload; the vibration threshold is declared `provisional` rather than pre
 
 ---
 
-## Phase E — Analysis
+## Phase E — Analysis ✅ complete
+
+Verified 2026-08-16: `pnpm verify` green, 522 tests.
+
+**Every threshold in the first rule set is `provisional`, and every finding says so in its own
+statement.** Nothing in this repository establishes a tracking-error criterion, a GPS outage
+tolerance or a vibration limit, and the right figures depend on airframe, tuning and the manoeuvre
+flown. Doc 03 §4 permits a provisional rule provided it does not present itself as settled; closing
+these out needs either a flight-test requirement document or empirical derivation from baseline
+logs, which is the same gap Phase F's requirement set will face.
 
 **Package:** `@pandalog/analysis`
 

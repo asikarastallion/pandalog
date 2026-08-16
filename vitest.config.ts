@@ -15,6 +15,7 @@ export default defineConfig({
       '@pandalog/parser-ardupilot': pkgSrc('parser-ardupilot'),
       '@pandalog/query': pkgSrc('query'),
       '@pandalog/events': pkgSrc('events'),
+      '@pandalog/analysis': pkgSrc('analysis'),
     },
   },
   test: {

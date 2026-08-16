@@ -36,6 +36,21 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/analysis:
+    dependencies:
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/events':
+        specifier: workspace:*
+        version: link:../events
+      '@pandalog/query':
+        specifier: workspace:*
+        version: link:../query
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/core-domain:
     dependencies:
       '@pandalog/schema':

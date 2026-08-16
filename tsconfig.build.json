@@ -7,6 +7,7 @@
     { "path": "./packages/ingestion" },
     { "path": "./packages/parser-ardupilot" },
     { "path": "./packages/query" },
-    { "path": "./packages/events" }
+    { "path": "./packages/events" },
+    { "path": "./packages/analysis" }
   ]
 }

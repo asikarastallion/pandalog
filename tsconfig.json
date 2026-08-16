@@ -14,7 +14,8 @@
       "@pandalog/ingestion": ["./packages/ingestion/src/index.ts"],
       "@pandalog/parser-ardupilot": ["./packages/parser-ardupilot/src/index.ts"],
       "@pandalog/query": ["./packages/query/src/index.ts"],
-      "@pandalog/events": ["./packages/events/src/index.ts"]
+      "@pandalog/events": ["./packages/events/src/index.ts"],
+      "@pandalog/analysis": ["./packages/analysis/src/index.ts"]
     }
   },
   "include": [
