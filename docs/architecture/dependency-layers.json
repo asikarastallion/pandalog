@@ -1,0 +1,178 @@
+{
+  "$schema": "./dependency-layers.schema.json",
+  "description": "Canonical dependency-direction manifest for PandaLog. Read and enforced by tests/architecture/dependency-direction.test.ts. A package MUST NOT import from a package not listed in its 'allowedDependencies'. A package MUST NOT import 'node:*' modules unless 'platformNeutral' is false.",
+  "layers": [
+    {
+      "layer": 0,
+      "package": "@pandalog/schema",
+      "path": "packages/schema",
+      "responsibility": "Canonical flight data model: types, enums, validity/unit definitions. No behavior, no I/O.",
+      "allowedDependencies": [],
+      "platformNeutral": true,
+      "introducedInPhase": "A"
+    },
+    {
+      "layer": 1,
+      "package": "@pandalog/core-domain",
+      "path": "packages/core-domain",
+      "responsibility": "Unit conversion tables, time base normalization, signal/dataset construction, validity propagation rules.",
+      "allowedDependencies": ["@pandalog/schema"],
+      "platformNeutral": true,
+      "introducedInPhase": "A"
+    },
+    {
+      "layer": 2,
+      "package": "@pandalog/ingestion",
+      "path": "packages/ingestion",
+      "responsibility": "Parser adapter contract, adapter registry, canonicalization bridge from raw source records to the canonical model.",
+      "allowedDependencies": ["@pandalog/schema", "@pandalog/core-domain"],
+      "platformNeutral": true,
+      "introducedInPhase": "A"
+    },
+    {
+      "layer": 3,
+      "package": "@pandalog/parser-ardupilot",
+      "path": "packages/parser-ardupilot",
+      "responsibility": "ArduPilot DataFlash (.bin/.log) binary decoding, FMT/message-table handling, adapter implementation for the ingestion contract.",
+      "allowedDependencies": ["@pandalog/schema", "@pandalog/core-domain", "@pandalog/ingestion"],
+      "platformNeutral": false,
+      "introducedInPhase": "B"
+    },
+    {
+      "layer": 4,
+      "package": "@pandalog/query",
+      "path": "packages/query",
+      "responsibility": "Signal query engine: selection, resampling, alignment across TimeBases, derived-signal registry and evaluation.",
+      "allowedDependencies": ["@pandalog/schema", "@pandalog/core-domain"],
+      "platformNeutral": true,
+      "introducedInPhase": "C"
+    },
+    {
+      "layer": 5,
+      "package": "@pandalog/events",
+      "path": "packages/events",
+      "responsibility": "Flight event detection engine operating on canonical datasets and derived signals.",
+      "allowedDependencies": ["@pandalog/schema", "@pandalog/core-domain", "@pandalog/query"],
+      "platformNeutral": true,
+      "introducedInPhase": "D"
+    },
+    {
+      "layer": 6,
+      "package": "@pandalog/analysis",
+      "path": "packages/analysis",
+      "responsibility": "Deterministic analysis rule engine; produces evidence-backed findings and hypotheses from events/signals.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/query",
+        "@pandalog/events"
+      ],
+      "platformNeutral": true,
+      "introducedInPhase": "E"
+    },
+    {
+      "layer": 7,
+      "package": "@pandalog/verification",
+      "path": "packages/verification",
+      "responsibility": "Requirement definitions and deterministic requirement evaluator (PASS/FAIL/INCONCLUSIVE/NOT_APPLICABLE).",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/query",
+        "@pandalog/events",
+        "@pandalog/analysis"
+      ],
+      "platformNeutral": true,
+      "introducedInPhase": "F"
+    },
+    {
+      "layer": 8,
+      "package": "@pandalog/cli",
+      "path": "packages/cli",
+      "responsibility": "Headless command-line execution of ingestion, analysis, verification, and report generation.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/ingestion",
+        "@pandalog/parser-ardupilot",
+        "@pandalog/query",
+        "@pandalog/events",
+        "@pandalog/analysis",
+        "@pandalog/verification",
+        "@pandalog/reporting"
+      ],
+      "platformNeutral": false,
+      "introducedInPhase": "G"
+    },
+    {
+      "layer": 8,
+      "package": "@pandalog/web",
+      "path": "apps/web",
+      "responsibility": "Vue application: investigation workspace, plots, map/3D, comparison, report preview. Consumes application services only.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/ingestion",
+        "@pandalog/parser-ardupilot",
+        "@pandalog/query",
+        "@pandalog/events",
+        "@pandalog/analysis",
+        "@pandalog/verification",
+        "@pandalog/reporting"
+      ],
+      "platformNeutral": false,
+      "introducedInPhase": "H"
+    },
+    {
+      "layer": 9,
+      "package": "@pandalog/comparison",
+      "path": "packages/comparison",
+      "responsibility": "Cross-flight and flight-vs-baseline comparison of signals, events, findings, and verification outcomes.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/query",
+        "@pandalog/events",
+        "@pandalog/analysis",
+        "@pandalog/verification"
+      ],
+      "platformNeutral": true,
+      "introducedInPhase": "J"
+    },
+    {
+      "layer": 9,
+      "package": "@pandalog/reporting",
+      "path": "packages/reporting",
+      "responsibility": "Renders structured analysis/verification/comparison artifacts into reproducible report documents. Performs no calculation.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/analysis",
+        "@pandalog/verification",
+        "@pandalog/comparison"
+      ],
+      "platformNeutral": true,
+      "introducedInPhase": "K"
+    },
+    {
+      "layer": 10,
+      "package": "@pandalog/ai",
+      "path": "packages/ai",
+      "responsibility": "Context builder over evidence + LLM client wrapper. Explains/summarizes/hypothesizes; never overrides deterministic results.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/analysis",
+        "@pandalog/verification",
+        "@pandalog/comparison"
+      ],
+      "platformNeutral": false,
+      "introducedInPhase": "L"
+    }
+  ],
+  "rules": [
+    "A package may only import from packages listed in its own allowedDependencies.",
+    "A package with platformNeutral=true must not import any 'node:*' builtin or any package whose package.json declares Node-only APIs.",
+    "No package may import from apps/web. Application code depends on packages; packages never depend on the application.",
+    "A layer number expresses a partial order only; packages sharing a layer number have no dependency relationship between them unless explicitly listed."
+  ]
+}
