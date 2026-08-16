@@ -1,0 +1,252 @@
+# 05 — Implementation Roadmap
+
+Status: baseline, updated at the end of every milestone (see
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A — complete.**
+
+A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
+exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
+phase because a later phase is more visible; do not start a later phase's package before its
+predecessors are actually done (checked against `docs/architecture/dependency-layers.json`).
+
+---
+
+## Phase A — Foundation ✅ complete
+
+**Packages:** `@pandalog/schema`, `@pandalog/core-domain`, `@pandalog/ingestion`
+
+**Delivers:**
+
+- Canonical types (`02_CANONICAL_DATA_MODEL.md`): `Validity`, `CanonicalUnit`, `TimeBase`,
+  `Signal`, `CanonicalFlightDataset`, `SourceProvenance`, `Vehicle`.
+- `core-domain`: unit conversion table + `toCanonical`, time-base construction helpers,
+  signal/dataset construction helpers, validity propagation on resampling.
+- `ingestion`: parser adapter interface (`ParserAdapter`), adapter registry, canonicalization
+  bridge, `validateCanonicalFlightDataset`.
+- `docs/architecture/dependency-layers.json` + `tests/architecture/dependency-direction.test.ts`.
+- Monorepo tooling: pnpm workspaces, `tsc -b` project references, ESLint (type-aware),
+  Vitest (or repo-chosen test runner), Prettier, `pnpm verify` pipeline.
+
+**Acceptance:**
+
+- `pnpm verify` green.
+- Architecture test catches: an upward dependency, an undeclared import, a `node:` import in a
+  `platformNeutral` package (see `tests/README.md` for the specific mutations).
+- `validateCanonicalFlightDataset` rejects a hand-built dataset violating each invariant in
+  `02_CANONICAL_DATA_MODEL.md` §3 (one test per invariant).
+
+---
+
+## Phase B — ArduPilot DataFlash
+
+**Package:** `@pandalog/parser-ardupilot`
+
+**Delivers:**
+
+- Binary DataFlash (`.bin`) reader: FMT/message-table parsing, message decoding by declared
+  field layout, timestamp extraction.
+- Legacy text `.log` support if still in scope (confirm against real-world prevalence before
+  building; ADR if scope is narrowed).
+- Adapter implementing `ParserAdapter`, producing a validated `CanonicalFlightDataset`.
+- Golden fixtures: at least 3 real or representative ArduPilot logs (nominal flight, a log with
+  GPS glitches/missing sections, a log with an in-flight mode change and an error message)
+  under `fixtures/ardupilot/`, each with expected canonical output.
+
+**Acceptance:**
+
+- Malformed/truncated binary input throws a structured `IngestionError`, no partial dataset
+  returned.
+- A field with a declared-but-unlogged message type surfaces as `Validity.UNSUPPORTED`, not
+  `MISSING` or a default value.
+- Fixture-based golden tests pass in CI.
+
+---
+
+## Phase C — Query + Signals
+
+**Package:** `@pandalog/query`
+
+**Delivers:**
+
+- Signal selection/query API over a `CanonicalFlightDataset` (by id, by pattern, by time
+  window).
+- Resampling/alignment across signals with different native `TimeBase`s, propagating
+  `syncUncertaintySeconds` and marking resampled points `Validity.INTERPOLATED`.
+- Derived-signal registry: a way to register a named derivation (e.g. lowpass filter, FFT
+  magnitude, numerical derivative) with method/version metadata, matching
+  `Signal.derivation` in doc 02 §5.
+- At least the derived signals needed by Phase D/E's first rules (e.g. attitude error,
+  vibration energy band) — driven by what analysis actually needs, not built speculatively.
+
+**Acceptance:**
+
+- Querying a signal across a resample never produces a finite value with non-`VALID` validity
+  or vice versa (property test).
+- Two signals with different `TimeBase.origin` cannot be silently aligned without the query
+  surfacing the `syncUncertaintySeconds` used.
+
+---
+
+## Phase D — Events
+
+**Package:** `@pandalog/events`
+
+**Delivers:**
+
+- Event detector interface + registry, mirroring the adapter pattern (`Adapter → Canonical`
+  becomes `Detector → FlightEvent`).
+- First detectors: mode changes, arm/disarm, GPS glitch/loss, logged error/message events,
+  a vibration-excursion detector.
+- Every detector cites the `sourceSignalIds` it used (doc 03 §2).
+
+**Acceptance:**
+
+- Each detector has nominal/boundary/malformed/missing-data/extreme-value tests (doc 04 §5).
+- Detected events on golden fixtures match expected output exactly.
+
+---
+
+## Phase E — Analysis
+
+**Package:** `@pandalog/analysis`
+
+**Delivers:**
+
+- Rule interface + registry; `createFinding` with mandatory-evidence validation (doc 03 §3).
+- First rule set (small, real, and documented per doc 03 §4 — inputs/formula/units/
+  thresholds/assumptions/evidence): e.g. roll/pitch tracking error vs. criterion, vibration
+  level vs. threshold, GPS glitch correlated with control-surface saturation.
+- `Hypothesis` construction path, kept structurally distinct from `Finding` (doc 03 §1).
+
+**Acceptance:**
+
+- No code path can construct a `Finding` with empty `evidence`.
+- Every threshold in every rule has a documented `basis` (`spec:`, `empirical:`, or
+  `provisional`, doc 03 §4); none are bare numeric literals.
+- Rules run from a unit test with no dependency on `apps/web` (doc 04 §1 rule 3).
+
+---
+
+## Phase F — Verification
+
+**Package:** `@pandalog/verification`
+
+**Delivers:**
+
+- `RequirementDefinition`/evaluator per doc 03 §2.
+- First versioned requirement set derived from real acceptance criteria (source: user-supplied
+  test plan or a documented placeholder set, explicitly marked provisional if invented for
+  bootstrapping).
+- Evaluator produces `NOT_APPLICABLE` for requirements outside a flight's applicable envelope
+  (vehicle type, mode) rather than forcing a PASS/FAIL.
+
+**Acceptance:**
+
+- Missing evidence always yields `INCONCLUSIVE`, verified by a test that withholds evidence and
+  asserts the outcome is never `PASS`.
+- Requirement evaluation is deterministic across repeated runs on the same fixture (doc 03 §6).
+
+---
+
+## Phase G — CLI
+
+**Package:** `@pandalog/cli`
+
+**Delivers:**
+
+- Headless command(s) covering: ingest a log → run analysis → run verification → emit a
+  structured (JSON) result and/or a report (once `reporting` exists; CLI may initially emit
+  structured JSON ahead of Phase K's human-readable report).
+- Exit codes reflecting verification outcome where relevant (e.g. non-zero on any `FAIL`), so
+  the CLI is usable in CI for a user's own flight-test pipeline.
+
+**Acceptance:**
+
+- Full ingest→analyze→verify path runs against a golden fixture with no `apps/web` involved,
+  producing output that matches a golden CLI-output fixture.
+
+---
+
+## Phase H — Web Investigation
+
+**App:** `apps/web` — static SPA, no backend (doc 01 §2, ADR-0006). Logs are opened via
+drag-and-drop or the File System Access API and never leave the client.
+
+**Delivers:**
+
+- Vue application shell consuming the packages built so far: dashboard, timeline, plots,
+  findings list, investigation workflow (Finding → Evidence → Time Window → Synchronized
+  Signals → Context, doc 03 §5).
+- State model shared across workspace views (doc 01 §4) — no per-page duplicated domain state.
+- Heavy work (parsing, transforms) delegated to Web Workers.
+
+**Acceptance:**
+
+- No component imports a `parser-*` internal or performs unit/time math directly (checked by
+  architecture test extension + code review per doc 04 §1 rules 1–2).
+- Selecting a `Finding` in the UI reaches its evidence and opens the correct synchronized time
+  window against real fixture data.
+
+---
+
+## Phase I — Map / 3D / Playback
+
+**App:** `apps/web` (extends)
+
+**Delivers:** Georeferenced map view, 3D attitude/trajectory playback, synchronized with the
+timeline/plots state from Phase H. Uses position/attitude signals already in the canonical
+model; does not introduce a new spatial data type outside `packages/schema` without an ADR.
+
+**Acceptance:** Playback position/attitude at a given timestamp matches the corresponding
+canonical signal values within documented interpolation tolerance.
+
+---
+
+## Phase J — Comparison
+
+**Package:** `@pandalog/comparison`
+
+**Delivers:** Flight-vs-flight and flight-vs-baseline comparison of signals, events, findings,
+and verification outcomes, per doc 01 §3.
+
+**Acceptance:** Comparing a fixture against itself yields "no material difference" on every
+axis (signals, events, findings, verification) — a self-consistency test.
+
+---
+
+## Phase K — Reporting
+
+**Package:** `@pandalog/reporting`
+
+**Delivers:** Reproducible report generation (doc 04 §7) from `Finding[]`/
+`VerificationResult[]`/comparison output, with full provenance stamping.
+
+**Acceptance:** Two report-generation runs against the same dataset and versions produce
+identical report content (deep-equal on structured output; rendered-format diffs limited to
+non-substantive metadata like generation timestamp, which is itself logged separately from
+provenance).
+
+---
+
+## Phase L — AI
+
+**Package:** `@pandalog/ai`
+
+**Delivers:** Context builder over `Finding`/`Hypothesis`/`VerificationResult` evidence, LLM
+client wrapper, `AiAnswer` output type (doc 03 §7). Opt-in only (doc 04 §8).
+
+**Acceptance:** Deleting `packages/ai` leaves `packages/cli` and `apps/web`'s core
+investigation/verification/reporting flows building and passing tests unchanged.
+
+---
+
+## Cross-phase rules
+
+- A phase's package cannot be started until every package in `docs/architecture/
+dependency-layers.json` with a lower `introducedInPhase` exists and is tested — the manifest
+  is the source of truth for "is the previous phase actually done," not this document's prose.
+- Every phase ends with the Phase Completion Routine in
+  `04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12 (full validation, architecture review, fixture
+  verification, roadmap status update in this document, coherent commits).
+- If a phase's acceptance criteria turn out to be wrong or incomplete once real implementation
+  starts, amend this document in the same change that reveals the gap — do not implement
+  around an acceptance criterion that no longer makes sense without updating it.
