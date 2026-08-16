@@ -36,6 +36,23 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)
 
+  packages/core-domain:
+    dependencies:
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
+  packages/ingestion:
+    dependencies:
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
+  packages/schema: {}
+
 packages:
 
   '@ampproject/remapping@2.3.0':
