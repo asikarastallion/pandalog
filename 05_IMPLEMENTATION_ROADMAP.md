@@ -12,6 +12,11 @@ predecessors are actually done (checked against `docs/architecture/dependency-la
 
 ## Phase A — Foundation ✅ complete
 
+Verified 2026-08-16: `pnpm verify` green, 216 tests. The architecture test was confirmed to fail on
+each of the three mutations in `tests/README.md`, not merely asserted to. Two contract defects were
+found and amended while implementing it — see ADR-0007 (validity invariant split) and ADR-0008
+(layer numbers follow dependencies).
+
 **Packages:** `@pandalog/schema`, `@pandalog/core-domain`, `@pandalog/ingestion`
 
 **Delivers:**
