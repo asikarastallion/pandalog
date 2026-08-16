@@ -1,0 +1,20 @@
+{
+  "name": "@pandalog/schema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Canonical flight data model. Layer 0, zero dependencies, platform neutral.",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ]
+}
