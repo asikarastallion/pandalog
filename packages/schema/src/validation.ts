@@ -8,7 +8,7 @@
  * It reports every issue it finds rather than stopping at the first, because an adapter author
  * fixing a conformance failure needs the whole list, not a one-at-a-time drip.
  *
- * Scope: invariants 1, 2, 3 and 6 of doc 02 §3, plus the structural well-formedness those checks
+ * Scope: invariants 1a, 1b, 2, 3 and 6 of doc 02 §3, plus the structural well-formedness those checks
  * depend on. Invariant 4 (immutability) is enforced by the `readonly` types and by
  * `tests/architecture/schema-purity.test.ts`, per the enforcement column in doc 02 §3 — a runtime
  * freeze check is deliberately not used, because `Object.freeze` on a `Map` does not prevent
@@ -82,7 +82,7 @@ class IssueLog {
   }
 }
 
-function validateTimeBase(value: unknown, path: string, log: IssueLog): void {
+function validateTimeBaseInto(value: unknown, path: string, log: IssueLog): void {
   if (!isRecord(value)) {
     log.add('TIMEBASE_INVALID', path, 'TimeBase must be an object');
     return;
@@ -117,7 +117,7 @@ function validateTimeBase(value: unknown, path: string, log: IssueLog): void {
   }
 }
 
-function validateProvenance(value: unknown, log: IssueLog): void {
+function validateProvenanceInto(value: unknown, log: IssueLog): void {
   const path = 'provenance';
   if (!isRecord(value)) {
     log.add('PROVENANCE_INVALID', path, 'provenance must be an object');
@@ -160,7 +160,7 @@ function validateProvenance(value: unknown, log: IssueLog): void {
   }
 }
 
-function validateVehicle(value: unknown, log: IssueLog): void {
+function validateVehicleInto(value: unknown, log: IssueLog): void {
   const path = 'vehicle';
   if (!isRecord(value)) {
     log.add('VEHICLE_INVALID', path, 'vehicle must be an object');
@@ -197,22 +197,25 @@ function validateSample(value: unknown, path: string, log: IssueLog): void {
     return;
   }
 
-  // Invariant 1 (doc 02 §3): value and validity are a pair; neither may be inferred from the
-  // other. A finite number carrying a non-VALID validity is exactly the silent-coercion failure
-  // the canonical model exists to prevent.
+  // Invariants 1a/1b (doc 02 §3, ADR-0007): value and validity are a pair; neither may be inferred
+  // from the other.
+  //   1a  value-bearing (VALID, INTERPOLATED)           -> finite value required
+  //   1b  non-value-bearing (MISSING, INVALID, UNSUPPORTED) -> NaN required
+  // A finite number carrying a non-value-bearing validity is exactly the silent-coercion failure
+  // the canonical model exists to prevent; NaN under a value-bearing one destroys a real number.
   if (VALUE_BEARING_VALIDITIES.has(validity)) {
     if (!Number.isFinite(numericValue)) {
       log.add(
         'VALIDITY_VALUE_MISMATCH',
         path,
-        `validity ${validity} requires a finite value, got ${String(numericValue)}`,
+        `value-bearing validity ${validity} requires a finite value, got ${String(numericValue)}`,
       );
     }
   } else if (!Number.isNaN(numericValue)) {
     log.add(
       'VALIDITY_VALUE_MISMATCH',
       path,
-      `validity ${validity} requires value NaN, got ${String(numericValue)}`,
+      `non-value-bearing validity ${validity} requires value NaN, got ${String(numericValue)}`,
     );
   }
 }
@@ -267,7 +270,7 @@ function validateSignal(key: string, value: unknown, log: IssueLog): void {
     log.add('SIGNAL_INVALID', `${path}.sourceUnit`, 'sourceUnit must be a string or null');
   }
 
-  validateTimeBase(value.timeBase, `${path}.timeBase`, log);
+  validateTimeBaseInto(value.timeBase, `${path}.timeBase`, log);
 
   const derived = value.derived;
   if (typeof derived !== 'boolean') {
@@ -302,7 +305,7 @@ function validateSignal(key: string, value: unknown, log: IssueLog): void {
   }
 }
 
-function validateSourceEvents(value: unknown, log: IssueLog): void {
+function validateSourceEventsInto(value: unknown, log: IssueLog): void {
   const path = 'sourceEvents';
   if (!Array.isArray(value)) {
     log.add('SOURCE_EVENTS_INVALID', path, 'sourceEvents must be an array');
@@ -336,6 +339,37 @@ function validateSourceEvents(value: unknown, log: IssueLog): void {
 }
 
 /**
+ * Focused validators over individual parts of the model.
+ *
+ * These exist so `@pandalog/core-domain`'s construction path can enforce exactly the same rules
+ * without restating them. The rules live here, in the package that owns the model; core-domain
+ * calls them at construction time, ingestion calls the whole-dataset validator at the boundary.
+ */
+export function validateTimeBase(value: unknown, path = 'timeBase'): readonly ValidationIssue[] {
+  const log = new IssueLog();
+  validateTimeBaseInto(value, path, log);
+  return log.issues;
+}
+
+export function validateProvenance(value: unknown): readonly ValidationIssue[] {
+  const log = new IssueLog();
+  validateProvenanceInto(value, log);
+  return log.issues;
+}
+
+export function validateVehicle(value: unknown): readonly ValidationIssue[] {
+  const log = new IssueLog();
+  validateVehicleInto(value, log);
+  return log.issues;
+}
+
+export function validateSourceEvents(value: unknown): readonly ValidationIssue[] {
+  const log = new IssueLog();
+  validateSourceEventsInto(value, log);
+  return log.issues;
+}
+
+/**
  * Validate a candidate canonical dataset.
  *
  * Never throws: ingestion decides what a failure means (doc 02 §6 makes it a hard ingestion
@@ -353,9 +387,9 @@ export function validateCanonicalFlightDataset(dataset: unknown): ValidationResu
     log.add('SCHEMA_VERSION_INVALID', 'schemaVersion', 'schemaVersion must be semver');
   }
 
-  validateProvenance(dataset.provenance, log);
-  validateVehicle(dataset.vehicle, log);
-  validateTimeBase(dataset.timeBase, 'timeBase', log);
+  validateProvenanceInto(dataset.provenance, log);
+  validateVehicleInto(dataset.vehicle, log);
+  validateTimeBaseInto(dataset.timeBase, 'timeBase', log);
 
   const signals: unknown = dataset.signals;
   if (!(signals instanceof Map)) {
@@ -370,7 +404,7 @@ export function validateCanonicalFlightDataset(dataset: unknown): ValidationResu
     }
   }
 
-  validateSourceEvents(dataset.sourceEvents, log);
+  validateSourceEventsInto(dataset.sourceEvents, log);
 
   return { valid: log.issues.length === 0, issues: log.issues };
 }

@@ -85,7 +85,8 @@ the ADRs for significant design decisions.
 Not style preferences — this is why the packages are split the way they are.
 
 - **One canonical model.** Adapters translate into it. Nothing invents a second representation.
-- **Missing data is not zero.** An absent sample becomes `NaN` + `Validity.MISSING`. Consumers
+- **Missing data is not zero.** An absent sample becomes `NaN` + `Validity.MISSING`; `NaN` means
+  "there is genuinely no number here", so it never stands in for an interpolated one. Consumers
   read `validity`; they never infer it from a value.
 - **Units are explicit.** Source units convert to canonical SI through one tested table. An
   unknown unit is an error, never an assumed identity.

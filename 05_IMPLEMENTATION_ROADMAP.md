@@ -79,8 +79,10 @@ predecessors are actually done (checked against `docs/architecture/dependency-la
 
 **Acceptance:**
 
-- Querying a signal across a resample never produces a finite value with non-`VALID` validity
-  or vice versa (property test).
+- Querying a signal across a resample never breaks doc 02 §3 invariants 1a/1b: a resampled point
+  marked `INTERPOLATED` carries a finite value, and a point with no supporting source data is
+  `MISSING` with `NaN` — never a finite value with a non-value-bearing validity, and never `NaN`
+  with a value-bearing one (property test).
 - Two signals with different `TimeBase.origin` cannot be silently aligned without the query
   surfacing the `syncUncertaintySeconds` used.
 

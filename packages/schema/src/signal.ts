@@ -7,7 +7,8 @@ import type { Validity } from './validity.js';
 
 export interface Sample {
   readonly t_rel_seconds: number;
-  readonly value: number; // NaN iff validity !== VALID
+  /** Finite iff `validity` is value-bearing (VALID | INTERPOLATED); otherwise NaN. See ADR-0007. */
+  readonly value: number;
   readonly validity: Validity;
 }
 

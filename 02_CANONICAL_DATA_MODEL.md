@@ -62,10 +62,22 @@ export enum Validity {
 }
 
 /**
- * Rule: if validity !== VALID, the paired numeric value MUST be NaN.
- * A finite number paired with a non-VALID validity is a schema violation and must fail
- * validation (see §6).
+ * Validity states split into two groups, and the paired numeric value follows from which group
+ * the state belongs to (see §3, invariants 1a and 1b; ADR-0007).
+ *
+ * Value-bearing      — VALID, INTERPOLATED     — value MUST be finite, never NaN.
+ * Non-value-bearing  — MISSING, INVALID, UNSUPPORTED — value MUST be NaN.
+ *
+ * VALID is a measurement; INTERPOLATED is a number produced by resampling/interpolation. Both are
+ * usable numbers, which is why INTERPOLATED carries a finite value — forcing it to NaN would make
+ * the state meaningless. NaN means, and only means, "there is genuinely no number here".
+ *
+ * Violating either direction is a schema violation and must fail validation (see §6).
  */
+export const VALUE_BEARING_VALIDITIES: ReadonlySet<Validity> = new Set([
+  Validity.VALID,
+  Validity.INTERPOLATED,
+]);
 ```
 
 ```ts
@@ -102,7 +114,7 @@ export interface TimeBase {
 
 export interface Sample {
   t_rel_seconds: number;
-  value: number; // NaN iff validity !== VALID
+  value: number; // finite iff validity is value-bearing (VALID | INTERPOLATED); otherwise NaN
   validity: Validity;
 }
 
@@ -170,7 +182,8 @@ export interface CanonicalFlightDataset {
 
 | #   | Invariant                                                                                                                                        | Enforcement                                                                                                                                             |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `validity !== VALID` ⇒ `value` is `NaN`.                                                                                                         | `packages/schema` runtime validator + property test in `packages/core-domain`.                                                                          |
+| 1a  | **Value-bearing validity** (`VALID`, `INTERPOLATED`) ⇒ `value` is finite. `NaN` or `±Infinity` here is a violation.                              | `packages/schema` runtime validator (`VALUE_BEARING_VALIDITIES`) + property test in `packages/core-domain`.                                             |
+| 1b  | **Non-value-bearing validity** (`MISSING`, `INVALID`, `UNSUPPORTED`) ⇒ `value` is `NaN`. A finite number here is a violation.                    | `packages/schema` runtime validator (`VALUE_BEARING_VALIDITIES`) + property test in `packages/core-domain`.                                             |
 | 2   | Every numeric `Signal` has a `CanonicalUnit`; there is no "unitless number" for a physical quantity.                                             | Type system (no optional `unit`) + adapter conformance test.                                                                                            |
 | 3   | Every `CanonicalFlightDataset` has exactly one primary `TimeBase`; every `Signal` states its own `TimeBase`, which may differ if resynchronized. | Type system + core-domain construction path.                                                                                                            |
 | 4   | `CanonicalFlightDataset` and `Signal` are immutable after construction (`ReadonlyArray`/`ReadonlyMap`, no exposed mutators).                     | TypeScript `readonly` + architecture test forbidding mutation helpers in `packages/schema`.                                                             |

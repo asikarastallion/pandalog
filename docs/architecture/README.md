@@ -28,10 +28,11 @@ and the code in the same commit (doc 01 §6).
 
 ## ADRs
 
-| ADR                                        | Decision                                           |
-| ------------------------------------------ | -------------------------------------------------- |
-| [ADR-0005](adr/0005-package-boundaries.md) | Why the package graph is split the way it is       |
-| [ADR-0006](adr/0006-no-backend.md)         | No backend: static client-side app plus a Node CLI |
+| ADR                                                  | Decision                                                        |
+| ---------------------------------------------------- | --------------------------------------------------------------- |
+| [ADR-0005](adr/0005-package-boundaries.md)           | Why the package graph is split the way it is                    |
+| [ADR-0006](adr/0006-no-backend.md)                   | No backend: static client-side app plus a Node CLI              |
+| [ADR-0007](adr/0007-validity-value-bearing-split.md) | Validity invariant split into value-bearing / non-value-bearing |
 
 ADR numbering starts at 0005 because doc 01 §2 and §4 already cite those identifiers; earlier
 numbers are reserved for the decisions recorded directly in documents 01-05.

@@ -128,10 +128,64 @@ describe('validateCanonicalFlightDataset', () => {
   });
 
   // ---------------------------------------------------------------------------------------------
-  // Invariant 1 — validity !== VALID  ⇒  value is NaN (doc 02 §3.1, doc 04 §1 rule 6)
+  // Invariants 1a / 1b — doc 02 §3, doc 04 §1 rule 6, ADR-0007.
+  //
+  //   1a  value-bearing      (VALID, INTERPOLATED)            => value is finite
+  //   1b  non-value-bearing  (MISSING, INVALID, UNSUPPORTED)  => value is NaN
   // ---------------------------------------------------------------------------------------------
-  describe('invariant 1 — validity and value are paired', () => {
-    it.each([Validity.MISSING, Validity.INVALID, Validity.UNSUPPORTED, Validity.INTERPOLATED])(
+  describe('invariant 1a — a value-bearing validity requires a finite value', () => {
+    it.each([Validity.VALID, Validity.INTERPOLATED])(
+      'accepts a finite value with %s',
+      (validity) => {
+        const result = validateCanonicalFlightDataset(
+          datasetWithSignal({ samples: Object.freeze([makeSample(0, 0.42, validity)]) }),
+        );
+
+        expect(result.issues).toEqual([]);
+        expect(result.valid).toBe(true);
+      },
+    );
+
+    it.each([Validity.VALID, Validity.INTERPOLATED])('rejects NaN paired with %s', (validity) => {
+      const result = validateCanonicalFlightDataset(
+        datasetWithSignal({ samples: Object.freeze([makeSample(0, NaN, validity)]) }),
+      );
+
+      expect(result.valid).toBe(false);
+      expect(codesOf(result)).toContain('VALIDITY_VALUE_MISMATCH');
+    });
+
+    it.each([Validity.VALID, Validity.INTERPOLATED])(
+      'rejects a non-finite value paired with %s',
+      (validity) => {
+        const result = validateCanonicalFlightDataset(
+          datasetWithSignal({ samples: Object.freeze([makeSample(0, Infinity, validity)]) }),
+        );
+
+        expect(result.valid).toBe(false);
+        expect(codesOf(result)).toContain('VALIDITY_VALUE_MISMATCH');
+      },
+    );
+
+    it('accepts an interpolated sample carrying a real number, which is the point of the state', () => {
+      // Regression guard for ADR-0007: under the pre-split rule this dataset was invalid, which
+      // made resampling (Phase C) unable to produce a usable signal at all.
+      const result = validateCanonicalFlightDataset(
+        datasetWithSignal({
+          samples: Object.freeze([
+            makeSample(0, 0.1, Validity.VALID),
+            makeSample(0.5, 0.2, Validity.INTERPOLATED),
+            makeSample(1, 0.3, Validity.VALID),
+          ]),
+        }),
+      );
+
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('invariant 1b — a non-value-bearing validity requires NaN', () => {
+    it.each([Validity.MISSING, Validity.INVALID, Validity.UNSUPPORTED])(
       'rejects a finite value paired with %s',
       (validity) => {
         const result = validateCanonicalFlightDataset(
@@ -143,32 +197,19 @@ describe('validateCanonicalFlightDataset', () => {
       },
     );
 
-    it('rejects NaN paired with VALID', () => {
-      const result = validateCanonicalFlightDataset(
-        datasetWithSignal({ samples: Object.freeze([makeSample(0, NaN, Validity.VALID)]) }),
-      );
+    it.each([Validity.MISSING, Validity.INVALID, Validity.UNSUPPORTED])(
+      'accepts NaN paired with %s',
+      (validity) => {
+        const result = validateCanonicalFlightDataset(
+          datasetWithSignal({ samples: Object.freeze([makeSample(0, NaN, validity)]) }),
+        );
 
-      expect(result.valid).toBe(false);
-      expect(codesOf(result)).toContain('VALIDITY_VALUE_MISMATCH');
-    });
+        expect(result.valid).toBe(true);
+      },
+    );
+  });
 
-    it('rejects a non-finite value paired with VALID', () => {
-      const result = validateCanonicalFlightDataset(
-        datasetWithSignal({ samples: Object.freeze([makeSample(0, Infinity, Validity.VALID)]) }),
-      );
-
-      expect(result.valid).toBe(false);
-      expect(codesOf(result)).toContain('VALIDITY_VALUE_MISMATCH');
-    });
-
-    it('accepts NaN paired with a non-VALID validity', () => {
-      const result = validateCanonicalFlightDataset(
-        datasetWithSignal({ samples: Object.freeze([makeSample(0, NaN, Validity.MISSING)]) }),
-      );
-
-      expect(result.valid).toBe(true);
-    });
-
+  describe('invariant 1 — shared sample well-formedness', () => {
     it('rejects a validity outside the Validity enum', () => {
       const result = validateCanonicalFlightDataset(
         datasetWithSignal({

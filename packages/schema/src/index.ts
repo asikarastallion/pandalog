@@ -8,7 +8,7 @@
 export { CANONICAL_UNITS, isCanonicalUnit } from './units.js';
 export type { CanonicalUnit, SourceUnit, UnitConversion } from './units.js';
 
-export { isValidity, Validity, VALUE_BEARING_VALIDITIES } from './validity.js';
+export { isValidity, isValueBearing, Validity, VALUE_BEARING_VALIDITIES } from './validity.js';
 
 export { isTimeOrigin, TIME_ORIGINS } from './time.js';
 export type { TimeBase, TimeOrigin } from './time.js';
@@ -18,5 +18,11 @@ export type { Sample, Signal, SignalDerivation } from './signal.js';
 export { SCHEMA_VERSION } from './dataset.js';
 export type { CanonicalFlightDataset, SourceEvent, SourceProvenance, Vehicle } from './dataset.js';
 
-export { validateCanonicalFlightDataset } from './validation.js';
+export {
+  validateCanonicalFlightDataset,
+  validateProvenance,
+  validateSourceEvents,
+  validateTimeBase,
+  validateVehicle,
+} from './validation.js';
 export type { ValidationIssue, ValidationIssueCode, ValidationResult } from './validation.js';
