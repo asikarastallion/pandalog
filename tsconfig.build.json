@@ -4,6 +4,7 @@
   "references": [
     { "path": "./packages/schema" },
     { "path": "./packages/core-domain" },
-    { "path": "./packages/ingestion" }
+    { "path": "./packages/ingestion" },
+    { "path": "./packages/parser-ardupilot" }
   ]
 }

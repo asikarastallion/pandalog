@@ -1,0 +1,519 @@
+{
+  "schemaVersion": "1.0.0",
+  "provenance": {
+    "fileName": "mode-change-error.bin",
+    "sha256": "2b1e51162d8d4f1b430741a175f78e35d7d32f70aaee7655c644443a878dd5c8",
+    "sizeBytes": 762,
+    "format": "ardupilot-dataflash",
+    "parserPackage": "@pandalog/parser-ardupilot",
+    "parserVersion": "0.1.0",
+    "ingestedAtUtc": "2026-01-01T00:00:00.000Z"
+  },
+  "vehicle": {
+    "frameClass": null,
+    "firmwareVersion": null,
+    "firmwareHash": null
+  },
+  "timeBase": {
+    "origin": "BOOT",
+    "epochUtc": null,
+    "syncUncertaintySeconds": null,
+    "uniformlySampled": false
+  },
+  "signals": [
+    {
+      "id": "attitude.pitch",
+      "unit": "rad",
+      "sourceUnit": "deg",
+      "derived": false,
+      "timeBase": {
+        "origin": "BOOT",
+        "epochUtc": null,
+        "syncUncertaintySeconds": null,
+        "uniformlySampled": false
+      },
+      "sampleCount": 12,
+      "samples": [
+        [
+          0,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          0.25,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          0.5,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          0.75,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          1,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          1.25,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          1.5,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          1.75,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          2,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          2.25,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          2.5,
+          -0.001745,
+          "VALID"
+        ],
+        [
+          2.75,
+          -0.001745,
+          "VALID"
+        ]
+      ]
+    },
+    {
+      "id": "attitude.pitch.desired",
+      "unit": "rad",
+      "sourceUnit": "deg",
+      "derived": false,
+      "timeBase": {
+        "origin": "BOOT",
+        "epochUtc": null,
+        "syncUncertaintySeconds": null,
+        "uniformlySampled": false
+      },
+      "sampleCount": 12,
+      "samples": [
+        [
+          0,
+          0,
+          "VALID"
+        ],
+        [
+          0.25,
+          0,
+          "VALID"
+        ],
+        [
+          0.5,
+          0,
+          "VALID"
+        ],
+        [
+          0.75,
+          0,
+          "VALID"
+        ],
+        [
+          1,
+          0,
+          "VALID"
+        ],
+        [
+          1.25,
+          0,
+          "VALID"
+        ],
+        [
+          1.5,
+          0,
+          "VALID"
+        ],
+        [
+          1.75,
+          0,
+          "VALID"
+        ],
+        [
+          2,
+          0,
+          "VALID"
+        ],
+        [
+          2.25,
+          0,
+          "VALID"
+        ],
+        [
+          2.5,
+          0,
+          "VALID"
+        ],
+        [
+          2.75,
+          0,
+          "VALID"
+        ]
+      ]
+    },
+    {
+      "id": "attitude.roll",
+      "unit": "rad",
+      "sourceUnit": "deg",
+      "derived": false,
+      "timeBase": {
+        "origin": "BOOT",
+        "epochUtc": null,
+        "syncUncertaintySeconds": null,
+        "uniformlySampled": false
+      },
+      "sampleCount": 12,
+      "samples": [
+        [
+          0,
+          0.001745,
+          "VALID"
+        ],
+        [
+          0.25,
+          0.001745,
+          "VALID"
+        ],
+        [
+          0.5,
+          0.001745,
+          "VALID"
+        ],
+        [
+          0.75,
+          0.001745,
+          "VALID"
+        ],
+        [
+          1,
+          0.001745,
+          "VALID"
+        ],
+        [
+          1.25,
+          0.001745,
+          "VALID"
+        ],
+        [
+          1.5,
+          0.001745,
+          "VALID"
+        ],
+        [
+          1.75,
+          0.001745,
+          "VALID"
+        ],
+        [
+          2,
+          0.001745,
+          "VALID"
+        ],
+        [
+          2.25,
+          0.001745,
+          "VALID"
+        ],
+        [
+          2.5,
+          0.001745,
+          "VALID"
+        ],
+        [
+          2.75,
+          0.001745,
+          "VALID"
+        ]
+      ]
+    },
+    {
+      "id": "attitude.roll.desired",
+      "unit": "rad",
+      "sourceUnit": "deg",
+      "derived": false,
+      "timeBase": {
+        "origin": "BOOT",
+        "epochUtc": null,
+        "syncUncertaintySeconds": null,
+        "uniformlySampled": false
+      },
+      "sampleCount": 12,
+      "samples": [
+        [
+          0,
+          0,
+          "VALID"
+        ],
+        [
+          0.25,
+          0,
+          "VALID"
+        ],
+        [
+          0.5,
+          0,
+          "VALID"
+        ],
+        [
+          0.75,
+          0,
+          "VALID"
+        ],
+        [
+          1,
+          0,
+          "VALID"
+        ],
+        [
+          1.25,
+          0,
+          "VALID"
+        ],
+        [
+          1.5,
+          0,
+          "VALID"
+        ],
+        [
+          1.75,
+          0,
+          "VALID"
+        ],
+        [
+          2,
+          0,
+          "VALID"
+        ],
+        [
+          2.25,
+          0,
+          "VALID"
+        ],
+        [
+          2.5,
+          0,
+          "VALID"
+        ],
+        [
+          2.75,
+          0,
+          "VALID"
+        ]
+      ]
+    },
+    {
+      "id": "attitude.yaw",
+      "unit": "rad",
+      "sourceUnit": "deg",
+      "derived": false,
+      "timeBase": {
+        "origin": "BOOT",
+        "epochUtc": null,
+        "syncUncertaintySeconds": null,
+        "uniformlySampled": false
+      },
+      "sampleCount": 12,
+      "samples": [
+        [
+          0,
+          0.790634,
+          "VALID"
+        ],
+        [
+          0.25,
+          0.790634,
+          "VALID"
+        ],
+        [
+          0.5,
+          0.790634,
+          "VALID"
+        ],
+        [
+          0.75,
+          0.790634,
+          "VALID"
+        ],
+        [
+          1,
+          0.790634,
+          "VALID"
+        ],
+        [
+          1.25,
+          0.790634,
+          "VALID"
+        ],
+        [
+          1.5,
+          0.790634,
+          "VALID"
+        ],
+        [
+          1.75,
+          0.790634,
+          "VALID"
+        ],
+        [
+          2,
+          0.790634,
+          "VALID"
+        ],
+        [
+          2.25,
+          0.790634,
+          "VALID"
+        ],
+        [
+          2.5,
+          0.790634,
+          "VALID"
+        ],
+        [
+          2.75,
+          0.790634,
+          "VALID"
+        ]
+      ]
+    },
+    {
+      "id": "attitude.yaw.desired",
+      "unit": "rad",
+      "sourceUnit": "deg",
+      "derived": false,
+      "timeBase": {
+        "origin": "BOOT",
+        "epochUtc": null,
+        "syncUncertaintySeconds": null,
+        "uniformlySampled": false
+      },
+      "sampleCount": 12,
+      "samples": [
+        [
+          0,
+          0.785398,
+          "VALID"
+        ],
+        [
+          0.25,
+          0.785398,
+          "VALID"
+        ],
+        [
+          0.5,
+          0.785398,
+          "VALID"
+        ],
+        [
+          0.75,
+          0.785398,
+          "VALID"
+        ],
+        [
+          1,
+          0.785398,
+          "VALID"
+        ],
+        [
+          1.25,
+          0.785398,
+          "VALID"
+        ],
+        [
+          1.5,
+          0.785398,
+          "VALID"
+        ],
+        [
+          1.75,
+          0.785398,
+          "VALID"
+        ],
+        [
+          2,
+          0.785398,
+          "VALID"
+        ],
+        [
+          2.25,
+          0.785398,
+          "VALID"
+        ],
+        [
+          2.5,
+          0.785398,
+          "VALID"
+        ],
+        [
+          2.75,
+          0.785398,
+          "VALID"
+        ]
+      ]
+    }
+  ],
+  "sourceEvents": [
+    {
+      "t_rel_seconds": 0,
+      "type": "message",
+      "payload": {
+        "Message": "ArduCopter V4.5.0 (synthetic fixture)"
+      }
+    },
+    {
+      "t_rel_seconds": 0.1,
+      "type": "mode-change",
+      "payload": {
+        "Mode": 0,
+        "ModeNum": 0,
+        "Rsn": 1
+      }
+    },
+    {
+      "t_rel_seconds": 1.5,
+      "type": "mode-change",
+      "payload": {
+        "Mode": 5,
+        "ModeNum": 5,
+        "Rsn": 1
+      }
+    },
+    {
+      "t_rel_seconds": 2,
+      "type": "error",
+      "payload": {
+        "Subsys": 11,
+        "ECode": 2
+      }
+    },
+    {
+      "t_rel_seconds": 2.5,
+      "type": "mode-change",
+      "payload": {
+        "Mode": 6,
+        "ModeNum": 6,
+        "Rsn": 4
+      }
+    }
+  ]
+}

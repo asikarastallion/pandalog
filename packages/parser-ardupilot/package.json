@@ -1,0 +1,25 @@
+{
+  "name": "@pandalog/parser-ardupilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ArduPilot DataFlash (.BIN) decoding and ingestion adapter. Layer 3.",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@pandalog/core-domain": "workspace:*",
+    "@pandalog/ingestion": "workspace:*",
+    "@pandalog/schema": "workspace:*"
+  }
+}

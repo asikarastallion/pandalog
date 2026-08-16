@@ -12,6 +12,7 @@ export default defineConfig({
       '@pandalog/schema': pkgSrc('schema'),
       '@pandalog/core-domain': pkgSrc('core-domain'),
       '@pandalog/ingestion': pkgSrc('ingestion'),
+      '@pandalog/parser-ardupilot': pkgSrc('parser-ardupilot'),
     },
   },
   test: {

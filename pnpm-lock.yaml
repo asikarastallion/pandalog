@@ -51,6 +51,18 @@ importers:
         specifier: workspace:*
         version: link:../schema
 
+  packages/parser-ardupilot:
+    dependencies:
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/ingestion':
+        specifier: workspace:*
+        version: link:../ingestion
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/schema: {}
 
 packages:

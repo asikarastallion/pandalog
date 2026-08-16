@@ -23,33 +23,36 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A — Foundation, complete;
-B — ArduPilot DataFlash, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A and B complete;
+C — Query + Signals, next.**
 
-Phase A means the three foundation packages exist, are tested, and are enforced: `pnpm verify` is
-green and the architecture test fails the build on an upward dependency, an undeclared import, or
-a `node:` import inside a package that must stay platform neutral.
+`pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
+fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
+that must stay platform neutral.
 
-There is no UI, CLI, or analysis engine yet — those are phases H, G, and E, and building them
-before the data contracts were settled is exactly what the architecture forbids. Nothing can read
-a real ArduPilot log yet either; that is Phase B, which is the first adapter written against the
-contract in `@pandalog/ingestion`.
+A `.BIN` log can now be ingested end to end into the canonical model — decoded, unit-converted,
+validity-tagged and provenance-stamped. Note the caveat in
+[`fixtures/ardupilot/README.md`](fixtures/ardupilot/README.md): the golden fixtures are synthetic,
+so the parser is proven internally consistent but not yet validated against a real vehicle's log.
 
-| Package                                         | Layer | Responsibility                                                                 | Phase |
-| ----------------------------------------------- | ----- | ------------------------------------------------------------------------------ | ----- |
-| [`@pandalog/schema`](packages/schema)           | 0     | The canonical flight data model. Zero dependencies.                            | A ✅  |
-| [`@pandalog/core-domain`](packages/core-domain) | 1     | Unit conversion, time normalisation, signal and dataset construction.          | A ✅  |
-| [`@pandalog/ingestion`](packages/ingestion)     | 2     | Parser adapter contract, registry, canonicalization bridge.                    | A ✅  |
-| `@pandalog/parser-ardupilot`                    | 3     | ArduPilot DataFlash decoding.                                                  | B     |
-| `@pandalog/query`                               | 4     | Signal query, resampling, derived-signal registry.                             | C     |
-| `@pandalog/events`                              | 5     | Flight event detection.                                                        | D     |
-| `@pandalog/analysis`                            | 6     | Deterministic rules → evidence-backed findings.                                | E     |
-| `@pandalog/verification`                        | 7     | Requirement definitions and evaluation.                                        | F     |
-| `@pandalog/comparison`                          | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
-| `@pandalog/reporting`                           | 10    | Reproducible report rendering (no calculation).                                | K     |
-| `@pandalog/ai`                                  | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
-| `@pandalog/cli`                                 | 11    | Headless ingest → analyze → verify → report.                                   | G     |
-| `apps/web`                                      | 11    | Vue investigation workspace.                                                   | H     |
+There is no query engine, analysis, UI or CLI yet — those are phases C, E, H and G, and building
+them before the data contracts were settled is exactly what the architecture forbids.
+
+| Package                                                   | Layer | Responsibility                                                                 | Phase |
+| --------------------------------------------------------- | ----- | ------------------------------------------------------------------------------ | ----- |
+| [`@pandalog/schema`](packages/schema)                     | 0     | The canonical flight data model. Zero dependencies.                            | A ✅  |
+| [`@pandalog/core-domain`](packages/core-domain)           | 1     | Unit conversion, time normalisation, signal and dataset construction.          | A ✅  |
+| [`@pandalog/ingestion`](packages/ingestion)               | 2     | Parser adapter contract, registry, canonicalization bridge.                    | A ✅  |
+| [`@pandalog/parser-ardupilot`](packages/parser-ardupilot) | 3     | ArduPilot DataFlash `.BIN` decoding.                                           | B ✅  |
+| `@pandalog/query`                                         | 4     | Signal query, resampling, derived-signal registry.                             | C     |
+| `@pandalog/events`                                        | 5     | Flight event detection.                                                        | D     |
+| `@pandalog/analysis`                                      | 6     | Deterministic rules → evidence-backed findings.                                | E     |
+| `@pandalog/verification`                                  | 7     | Requirement definitions and evaluation.                                        | F     |
+| `@pandalog/comparison`                                    | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
+| `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
+| `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
+| `@pandalog/cli`                                           | 11    | Headless ingest → analyze → verify → report.                                   | G     |
+| `apps/web`                                                | 11    | Vue investigation workspace.                                                   | H     |
 
 Layer number orders dependencies, not build order: `cli` and `web` arrive in phases G and H but
 sit at the top because they consume everything beneath them (ADR-0008).

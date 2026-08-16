@@ -225,11 +225,12 @@ describe('the repository itself obeys the manifest', () => {
   it('actually scanned the packages that exist, so a green result means something', () => {
     const withSource = scannedPackages.filter((entry) => entry.files.length > 0);
 
-    // Phase A's three packages. This guards the failure mode where a path typo makes every
+    // The packages built so far. This guards the failure mode where a path typo makes every
     // package scan zero files and the check passes vacuously.
     expect(withSource.map((entry) => entry.package).sort()).toEqual([
       '@pandalog/core-domain',
       '@pandalog/ingestion',
+      '@pandalog/parser-ardupilot',
       '@pandalog/schema',
     ]);
   });

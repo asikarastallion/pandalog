@@ -33,7 +33,7 @@
       "layer": 3,
       "package": "@pandalog/parser-ardupilot",
       "path": "packages/parser-ardupilot",
-      "responsibility": "ArduPilot DataFlash (.bin/.log) binary decoding, FMT/message-table handling, adapter implementation for the ingestion contract.",
+      "responsibility": "ArduPilot DataFlash (.BIN) binary decoding, FMT/message-table handling, adapter implementation for the ingestion contract. Text .log is out of scope (ADR-0009).",
       "allowedDependencies": ["@pandalog/schema", "@pandalog/core-domain", "@pandalog/ingestion"],
       "platformNeutral": false,
       "introducedInPhase": "B"
