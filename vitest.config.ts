@@ -16,6 +16,7 @@ export default defineConfig({
       '@pandalog/query': pkgSrc('query'),
       '@pandalog/events': pkgSrc('events'),
       '@pandalog/analysis': pkgSrc('analysis'),
+      '@pandalog/verification': pkgSrc('verification'),
     },
   },
   test: {

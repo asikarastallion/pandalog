@@ -23,20 +23,24 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through E complete;
-F — Verification, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through F complete;
+G — CLI, next.**
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
 that must stay platform neutral.
 
-A `.BIN` log can now be ingested end to end into the canonical model — decoded, unit-converted,
-validity-tagged and provenance-stamped. Note the caveat in
-[`fixtures/ardupilot/README.md`](fixtures/ardupilot/README.md): the golden fixtures are synthetic,
-so the parser is proven internally consistent but not yet validated against a real vehicle's log.
+A `.BIN` log now runs the whole deterministic pipeline: ingested into the canonical model, queried
+and resampled, detected into events, analysed into evidence-backed findings, and verified against a
+requirement set — with the outcome of all four stages committed as golden fixtures. Note the caveat
+in [`fixtures/ardupilot/README.md`](fixtures/ardupilot/README.md): those fixtures are synthetic, so
+the parser is proven internally consistent but not yet validated against a real vehicle's log.
 
-There is no query engine, analysis, UI or CLI yet — those are phases C, E, H and G, and building
-them before the data contracts were settled is exactly what the architecture forbids.
+Two limits are worth stating plainly rather than discovering later. **Every threshold and every
+requirement currently in the repository is `provisional`** — nothing here traces to a flight-test
+document, so a PASS means a placeholder criterion was met, and each finding and result says so in
+its own text. And there is **no UI or CLI yet** — those are phases H and G. Building them before the
+data contracts were settled is exactly what the architecture forbids.
 
 | Package                                                   | Layer | Responsibility                                                                 | Phase |
 | --------------------------------------------------------- | ----- | ------------------------------------------------------------------------------ | ----- |
@@ -44,10 +48,10 @@ them before the data contracts were settled is exactly what the architecture for
 | [`@pandalog/core-domain`](packages/core-domain)           | 1     | Unit conversion, time normalisation, signal and dataset construction.          | A ✅  |
 | [`@pandalog/ingestion`](packages/ingestion)               | 2     | Parser adapter contract, registry, canonicalization bridge.                    | A ✅  |
 | [`@pandalog/parser-ardupilot`](packages/parser-ardupilot) | 3     | ArduPilot DataFlash `.BIN` decoding.                                           | B ✅  |
-| `@pandalog/query`                                         | 4     | Signal query, resampling, derived-signal registry.                             | C     |
-| `@pandalog/events`                                        | 5     | Flight event detection.                                                        | D     |
-| `@pandalog/analysis`                                      | 6     | Deterministic rules → evidence-backed findings.                                | E     |
-| `@pandalog/verification`                                  | 7     | Requirement definitions and evaluation.                                        | F     |
+| [`@pandalog/query`](packages/query)                       | 4     | Signal query, resampling, derived-signal registry.                             | C ✅  |
+| [`@pandalog/events`](packages/events)                     | 5     | Flight event detection.                                                        | D ✅  |
+| [`@pandalog/analysis`](packages/analysis)                 | 6     | Deterministic rules → evidence-backed findings.                                | E ✅  |
+| [`@pandalog/verification`](packages/verification)         | 7     | Requirement definitions and evaluation.                                        | F ✅  |
 | `@pandalog/comparison`                                    | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
 | `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
 | `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |

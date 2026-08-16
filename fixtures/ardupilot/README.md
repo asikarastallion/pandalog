@@ -6,9 +6,26 @@
 | `gps-glitch.bin`        | A GPS fix loss with NaN speed samples, plus `VIBE` declared but never logged |
 | `mode-change-error.bin` | In-flight mode changes, a logged error, and a text message                   |
 
-Each `.bin` is paired with `<name>.expected.json` — the full canonical dataset it must produce,
-compared on every test run. A change to decoding, unit conversion, signal naming or validity
-handling appears as a diff there.
+Each `.bin` is paired with three goldens, one per pipeline stage, all compared on every test run:
+
+| Golden                     | Stage                | A diff here means                                      |
+| -------------------------- | -------------------- | ------------------------------------------------------ |
+| `<name>.expected.json`     | canonical dataset    | decoding, unit conversion, signal naming or validity   |
+| `<name>.events.json`       | detected events      | a detector's logic or threshold                        |
+| `<name>.verification.json` | requirement outcomes | an analysis criterion or a requirement's applicability |
+
+The verification golden is the end-to-end one: it runs ingest → detect → analyse → verify, so a
+change anywhere beneath it moves a PASS, FAIL, INCONCLUSIVE or NOT_APPLICABLE.
+
+Two of its current outcomes are worth reading rather than skimming, because both are honest results
+rather than bugs:
+
+- `gps-glitch` **passes** `REQ-GNSS-001`. The fixture's fix loss lasts 0.4 s and the provisional
+  tolerance is 2 s. Lowering the tolerance until this fixture failed would be fitting a threshold to
+  the data at hand — exactly what doc 03 §4 forbids.
+- `gps-glitch` is **inconclusive** on `REQ-VIB-001`. The log declares the `VIBE` message but never
+  writes a sample, so all three axes exist with `UNSUPPORTED` validity. Nothing was examined, so
+  nothing is verified — which is the distinction the whole package is built around.
 
 ## These logs are synthetic
 

@@ -1,0 +1,83 @@
+{
+  "requirementSetId": "pandalog-provisional",
+  "requirementSetVersion": "1.0.0",
+  "requirementSetSource": "provisional",
+  "results": [
+    {
+      "requirementId": "REQ-ATT-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "PASS",
+      "evidence": [
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.roll",
+          "t_start_seconds": 0,
+          "t_end_seconds": 1.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.roll.desired",
+          "t_start_seconds": 0,
+          "t_end_seconds": 1.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.pitch",
+          "t_start_seconds": 0,
+          "t_end_seconds": 1.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.pitch.desired",
+          "t_start_seconds": 0,
+          "t_end_seconds": 1.9
+        }
+      ],
+      "reason": "analysis:attitude-tracking-error raised no finding over the 4 signal window(s) examined (t=[0.000, 1.900]). The criterion is provisional and is not traceable to a flight-test document, so this PASS means the flight met a provisional criterion, not a qualified one.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "requirementId": "REQ-ERR-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "PASS",
+      "evidence": [
+        {
+          "kind": "event",
+          "eventId": "events:mode-change:mode-change@0.000000#0"
+        }
+      ],
+      "reason": "1 discrete log record(s) were examined over t=[0.000, 0.000] and none was an error. This assumes the firmware's error logging was enabled; the canonical dataset carries no logging-bitmask field, so PandaLog cannot confirm it.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "requirementId": "REQ-GNSS-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "PASS",
+      "evidence": [
+        {
+          "kind": "signal-window",
+          "signalId": "gps.fix_type",
+          "t_start_seconds": 0,
+          "t_end_seconds": 1.8
+        }
+      ],
+      "reason": "analysis:gps-availability raised no finding over the 1 signal window(s) examined (t=[0.000, 1.800]). The criterion is provisional and is not traceable to a flight-test document, so this PASS means the flight met a provisional criterion, not a qualified one.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "requirementId": "REQ-VIB-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "NOT_APPLICABLE",
+      "evidence": [],
+      "reason": "Outside this flight's applicable envelope, so no PASS or FAIL is claimed. Applies to any flight logging all three vibration axes. A partial axis set is not enough to judge airframe vibration and produces NOT_APPLICABLE.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "summary": {
+    "PASS": 3,
+    "FAIL": 0,
+    "INCONCLUSIVE": 0,
+    "NOT_APPLICABLE": 1
+  },
+  "evidenceRuleViolations": []
+}

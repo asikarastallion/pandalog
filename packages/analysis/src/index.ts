@@ -12,7 +12,7 @@ export type { AnalysisErrorCode } from './errors.js';
 export { evidenceTimeSpan, validateEvidenceRef } from './evidence.js';
 export type { EvidenceRef } from './evidence.js';
 
-export { createFinding, findingId } from './finding.js';
+export { createFinding, findingId, isThresholdBasis } from './finding.js';
 export type {
   CreateFindingInput,
   Finding,

@@ -60,6 +60,16 @@ export interface Finding {
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const BASIS_RE = /^(spec:.+|empirical:.+|provisional)$/;
 
+/**
+ * Whether a string states where a threshold came from (doc 03 §4).
+ *
+ * Exported because doc 03 §4 applies the identical contract to requirements in
+ * `@pandalog/verification`; one predicate keeps the two from drifting apart.
+ */
+export function isThresholdBasis(basis: string): boolean {
+  return BASIS_RE.test(basis);
+}
+
 export interface CreateFindingInput {
   readonly id: string;
   readonly ruleId: string;
@@ -137,7 +147,7 @@ export function createFinding(input: CreateFindingInput): Finding {
     if (!Number.isFinite(threshold.value)) {
       fail(`Threshold ${threshold.label} must be a finite number.`);
     }
-    if (!BASIS_RE.test(threshold.basis)) {
+    if (!isThresholdBasis(threshold.basis)) {
       fail(
         `Threshold ${threshold.label} declares basis ${JSON.stringify(threshold.basis)}. It must be ` +
           'spec:<document/section>, empirical:<dataset/method>, or provisional (doc 03 §4). An ' +

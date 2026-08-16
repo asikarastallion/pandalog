@@ -235,6 +235,7 @@ describe('the repository itself obeys the manifest', () => {
       '@pandalog/parser-ardupilot',
       '@pandalog/query',
       '@pandalog/schema',
+      '@pandalog/verification',
     ]);
   });
 });

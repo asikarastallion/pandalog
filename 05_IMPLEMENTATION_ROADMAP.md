@@ -164,7 +164,16 @@ logs, which is the same gap Phase F's requirement set will face.
 
 ---
 
-## Phase F — Verification
+## Phase F — Verification ✅ complete
+
+Verified 2026-08-16: `pnpm verify` green, 616 tests.
+
+**The requirement set is a provisional placeholder, as this section's "Delivers" permits.** No test
+plan exists in this repository, so the four shipped requirements state `source: 'provisional'`, say
+so in every `statement`, and repeat it in the `reason` of every result. A PASS from this set means
+the flight met a placeholder criterion and must not be read as qualification evidence. Replacing it
+is a first-class operation: `createRequirementSet` is exported and imposes doc 03 §4's documentation
+contract on a user's own requirements exactly as it does on these.
 
 **Package:** `@pandalog/verification`
 

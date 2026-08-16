@@ -101,6 +101,24 @@ importers:
 
   packages/schema: {}
 
+  packages/verification:
+    dependencies:
+      '@pandalog/analysis':
+        specifier: workspace:*
+        version: link:../analysis
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/events':
+        specifier: workspace:*
+        version: link:../events
+      '@pandalog/query':
+        specifier: workspace:*
+        version: link:../query
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
 packages:
 
   '@ampproject/remapping@2.3.0':
