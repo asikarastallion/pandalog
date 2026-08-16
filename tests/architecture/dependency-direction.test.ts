@@ -229,6 +229,7 @@ describe('the repository itself obeys the manifest', () => {
     // package scan zero files and the check passes vacuously.
     expect(withSource.map((entry) => entry.package).sort()).toEqual([
       '@pandalog/analysis',
+      '@pandalog/cli',
       '@pandalog/core-domain',
       '@pandalog/events',
       '@pandalog/ingestion',

@@ -9,6 +9,7 @@
     { "path": "./packages/query" },
     { "path": "./packages/events" },
     { "path": "./packages/analysis" },
-    { "path": "./packages/verification" }
+    { "path": "./packages/verification" },
+    { "path": "./packages/cli" }
   ]
 }

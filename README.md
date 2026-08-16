@@ -23,8 +23,8 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through F complete;
-G — CLI, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through G complete;
+H — Web Investigation, next.**
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
@@ -36,11 +36,14 @@ requirement set — with the outcome of all four stages committed as golden fixt
 in [`fixtures/ardupilot/README.md`](fixtures/ardupilot/README.md): those fixtures are synthetic, so
 the parser is proven internally consistent but not yet validated against a real vehicle's log.
 
-Two limits are worth stating plainly rather than discovering later. **Every threshold and every
-requirement currently in the repository is `provisional`** — nothing here traces to a flight-test
-document, so a PASS means a placeholder criterion was met, and each finding and result says so in
-its own text. And there is **no UI or CLI yet** — those are phases H and G. Building them before the
-data contracts were settled is exactly what the architecture forbids.
+`pandalog verify` runs that pipeline headless and returns a CI-usable exit code (see
+[Verifying a log](#verifying-a-log)). There is **no UI yet** — that is phase H, and building it
+before the data contracts were settled is exactly what the architecture forbids.
+
+One limit is worth stating plainly rather than discovering later: **every threshold and every
+requirement currently in the repository is `provisional`.** Nothing here traces to a flight-test
+document, so a PASS means a placeholder criterion was met — and each finding, each result and the
+CLI's own stderr summary says so rather than leaving it to be inferred.
 
 | Package                                                   | Layer | Responsibility                                                                 | Phase |
 | --------------------------------------------------------- | ----- | ------------------------------------------------------------------------------ | ----- |
@@ -55,7 +58,7 @@ data contracts were settled is exactly what the architecture forbids.
 | `@pandalog/comparison`                                    | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
 | `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
 | `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
-| `@pandalog/cli`                                           | 11    | Headless ingest → analyze → verify → report.                                   | G     |
+| [`@pandalog/cli`](packages/cli)                           | 11    | Headless ingest → analyze → verify → report.                                   | G ✅  |
 | `apps/web`                                                | 11    | Vue investigation workspace.                                                   | H     |
 
 Layer number orders dependencies, not build order: `cli` and `web` arrive in phases G and H but
@@ -82,6 +85,31 @@ pnpm verify     # typecheck → lint → test → build
 | `pnpm format`        | Prettier                                 |
 
 Requires Node ≥ 20.11 and pnpm 9.
+
+## Verifying a log
+
+```bash
+pnpm build
+node packages/cli/dist/bin.js verify fixtures/ardupilot/nominal.bin
+```
+
+The full result — provenance, findings, hypotheses and every requirement outcome with its evidence
+— goes to stdout as JSON; a one-line summary goes to stderr, so `> result.json` gives a clean
+document. The exit status is what a CI pipeline reads:
+
+| Code | Meaning                                                      |
+| ---- | ------------------------------------------------------------ |
+| 0    | Every requirement that applied passed                        |
+| 1    | At least one requirement FAILED                              |
+| 2    | Nothing failed, but nothing was conclusively verified either |
+| 64   | The command line could not be understood                     |
+| 65   | The log could not be read or parsed                          |
+| 70   | An unexpected internal failure                               |
+
+**Exit 2 is deliberately not a success.** A flight where every requirement came back INCONCLUSIVE
+or NOT_APPLICABLE was not verified, and a green pipeline would report confidence PandaLog does not
+have. Operational failures use `sysexits.h` values so 0–2 stay reserved for what the verification
+actually concluded — a CI script can tell "the aircraft failed" from "the tool could not run".
 
 ## Architecture
 

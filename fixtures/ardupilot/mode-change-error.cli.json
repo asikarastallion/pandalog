@@ -1,0 +1,122 @@
+{
+  "tool": {
+    "name": "pandalog",
+    "version": "0.1.0"
+  },
+  "command": "verify",
+  "log": {
+    "fileName": "mode-change-error.bin",
+    "sha256": "2b1e51162d8d4f1b430741a175f78e35d7d32f70aaee7655c644443a878dd5c8",
+    "sizeBytes": 762,
+    "format": "ardupilot-dataflash",
+    "parserPackage": "@pandalog/parser-ardupilot",
+    "parserVersion": "0.1.0",
+    "ingestedAtUtc": "2026-01-01T00:00:00.000Z"
+  },
+  "vehicle": {
+    "frameClass": null,
+    "firmwareVersion": null,
+    "firmwareHash": null
+  },
+  "timeBase": {
+    "origin": "BOOT",
+    "epochUtc": null,
+    "syncUncertaintySeconds": null,
+    "uniformlySampled": false
+  },
+  "counts": {
+    "signals": 6,
+    "sourceEvents": 5,
+    "events": 5,
+    "findings": 0,
+    "hypotheses": 0
+  },
+  "analysis": {
+    "findings": [],
+    "hypotheses": [],
+    "notApplicableRuleIds": [
+      "analysis:gps-availability",
+      "analysis:vibration-level"
+    ]
+  },
+  "verification": {
+    "requirementSetId": "pandalog-provisional",
+    "requirementSetVersion": "1.0.0",
+    "requirementSetSource": "provisional",
+    "results": [
+      {
+        "requirementId": "REQ-ATT-001",
+        "requirementVersion": "1.0.0",
+        "outcome": "PASS",
+        "evidence": [
+          {
+            "kind": "signal-window",
+            "signalId": "attitude.roll",
+            "t_start_seconds": 0,
+            "t_end_seconds": 2.75
+          },
+          {
+            "kind": "signal-window",
+            "signalId": "attitude.roll.desired",
+            "t_start_seconds": 0,
+            "t_end_seconds": 2.75
+          },
+          {
+            "kind": "signal-window",
+            "signalId": "attitude.pitch",
+            "t_start_seconds": 0,
+            "t_end_seconds": 2.75
+          },
+          {
+            "kind": "signal-window",
+            "signalId": "attitude.pitch.desired",
+            "t_start_seconds": 0,
+            "t_end_seconds": 2.75
+          }
+        ],
+        "reason": "analysis:attitude-tracking-error raised no finding over the 4 signal window(s) examined (t=[0.000, 2.750]). The criterion is provisional and is not traceable to a flight-test document, so this PASS means the flight met a provisional criterion, not a qualified one.",
+        "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "requirementId": "REQ-ERR-001",
+        "requirementVersion": "1.0.0",
+        "outcome": "FAIL",
+        "evidence": [
+          {
+            "kind": "event",
+            "eventId": "events:logged-error:logged-error@2.000000#0"
+          }
+        ],
+        "reason": "The log records 1 flight-controller error(s), the first at t=2.000 s. What each error means is firmware-specific and is not interpreted here; the subsystem and error codes are carried in the cited events.",
+        "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "requirementId": "REQ-GNSS-001",
+        "requirementVersion": "1.0.0",
+        "outcome": "NOT_APPLICABLE",
+        "evidence": [],
+        "reason": "Outside this flight's applicable envelope, so no PASS or FAIL is claimed. Applies to any flight logging a GNSS fix type. A deliberately GPS-denied test, or a vehicle with no receiver, produces NOT_APPLICABLE rather than a failure.",
+        "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "requirementId": "REQ-VIB-001",
+        "requirementVersion": "1.0.0",
+        "outcome": "NOT_APPLICABLE",
+        "evidence": [],
+        "reason": "Outside this flight's applicable envelope, so no PASS or FAIL is claimed. Applies to any flight logging all three vibration axes. A partial axis set is not enough to judge airframe vibration and produces NOT_APPLICABLE.",
+        "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+      }
+    ],
+    "summary": {
+      "PASS": 1,
+      "FAIL": 1,
+      "INCONCLUSIVE": 0,
+      "NOT_APPLICABLE": 2
+    },
+    "evidenceRuleViolations": []
+  },
+  "outcome": {
+    "exitCode": 1,
+    "summary": "1 passed, 1 failed, 0 inconclusive, 2 not applicable"
+  }
+}

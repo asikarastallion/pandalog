@@ -6,16 +6,19 @@
 | `gps-glitch.bin`        | A GPS fix loss with NaN speed samples, plus `VIBE` declared but never logged |
 | `mode-change-error.bin` | In-flight mode changes, a logged error, and a text message                   |
 
-Each `.bin` is paired with three goldens, one per pipeline stage, all compared on every test run:
+Each `.bin` is paired with four goldens, one per pipeline stage, all compared on every test run:
 
 | Golden                     | Stage                | A diff here means                                      |
 | -------------------------- | -------------------- | ------------------------------------------------------ |
 | `<name>.expected.json`     | canonical dataset    | decoding, unit conversion, signal naming or validity   |
 | `<name>.events.json`       | detected events      | a detector's logic or threshold                        |
 | `<name>.verification.json` | requirement outcomes | an analysis criterion or a requirement's applicability |
+| `<name>.cli.json`          | full CLI document    | the wiring between stages, or the CLI's own envelope   |
 
-The verification golden is the end-to-end one: it runs ingest → detect → analyse → verify, so a
-change anywhere beneath it moves a PASS, FAIL, INCONCLUSIVE or NOT_APPLICABLE.
+The verification golden runs ingest → detect → analyse → verify, so a change anywhere beneath it
+moves a PASS, FAIL, INCONCLUSIVE or NOT_APPLICABLE. The CLI golden is what a user in CI actually
+receives — the same pipeline plus provenance, counts and the exit code — so a stage that stops being
+wired to the next shows up there even when each stage still passes its own golden.
 
 Two of its current outcomes are worth reading rather than skimming, because both are honest results
 rather than bugs:

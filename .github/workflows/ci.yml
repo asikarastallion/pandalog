@@ -47,3 +47,26 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # `src/bin.ts` is the one file the unit tests cannot reach: it exists to wire argv, the
+      # filesystem, the streams and the exit call to `runCli`. This smoke test runs the built
+      # binary as a real process and asserts the exit codes a user's CI pipeline depends on —
+      # 0 for a clean flight, 1 for a failing requirement, 65 for an unreadable log.
+      - name: CLI smoke test
+        run: |
+          set -u
+          check() {
+            node packages/cli/dist/bin.js "${@:2}" >/dev/null 2>&1
+            actual=$?
+            if [ "$actual" -ne "$1" ]; then
+              echo "expected exit $1 from 'pandalog ${*:2}', got $actual" >&2
+              exit 1
+            fi
+          }
+          check 0  verify fixtures/ardupilot/nominal.bin --quiet
+          check 1  verify fixtures/ardupilot/mode-change-error.bin --quiet
+          check 2  verify fixtures/ardupilot/gps-glitch.bin --quiet
+          check 64 badcommand
+          check 65 verify does-not-exist.bin
+          node packages/cli/dist/bin.js verify fixtures/ardupilot/nominal.bin --quiet | node -e \
+            'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>JSON.parse(s))'

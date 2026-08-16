@@ -1,0 +1,103 @@
+/**
+ * Argument parsing, as a pure function over argv.
+ *
+ * No dependency on `process`, so the entire command surface is exercised by unit tests rather than
+ * by spawning a shell. Hand-written rather than pulled from a dependency: the grammar is one
+ * command and three flags, and doc 04's zero-runtime-dependency posture is worth more here than
+ * the few lines saved.
+ */
+
+export interface VerifyCommand {
+  readonly kind: 'verify';
+  readonly file: string;
+  readonly quiet: boolean;
+}
+
+export type ParsedArgs =
+  | VerifyCommand
+  | { readonly kind: 'help' }
+  | { readonly kind: 'version' }
+  | { readonly kind: 'usage-error'; readonly message: string };
+
+const HELP_FLAGS: ReadonlySet<string> = new Set(['--help', '-h', 'help']);
+
+const usageError = (message: string): ParsedArgs => ({ kind: 'usage-error', message });
+
+/**
+ * Parse `argv` (already stripped of the node binary and script path).
+ *
+ * A bare invocation is a usage error rather than a help screen: printing help and exiting 0 would
+ * make a mistyped CI step look like a successful verification.
+ */
+export function parseArgs(argv: readonly string[]): ParsedArgs {
+  const flags: string[] = [];
+  const positional: string[] = [];
+
+  for (const argument of argv) {
+    (argument.startsWith('-') ? flags : positional).push(argument);
+  }
+
+  if (argv.some((argument) => HELP_FLAGS.has(argument))) {
+    return { kind: 'help' };
+  }
+  if (flags.includes('--version')) {
+    return { kind: 'version' };
+  }
+
+  const unknownFlag = flags.find((flag) => flag !== '--quiet');
+  if (unknownFlag !== undefined) {
+    return usageError(`Unknown option ${unknownFlag}. Run "pandalog --help" for usage.`);
+  }
+
+  const [command, file, ...extra] = positional;
+
+  if (command === undefined) {
+    return usageError('No command given. Run "pandalog --help" for usage.');
+  }
+  if (command !== 'verify') {
+    return usageError(`Unknown command "${command}". The only command is "verify".`);
+  }
+  if (file === undefined) {
+    return usageError('"pandalog verify" needs a log file to verify.');
+  }
+  if (extra.length > 0) {
+    return usageError(
+      `"pandalog verify" takes one log at a time; got ${String(extra.length + 1)} ` +
+        `(${file}, ${extra.join(', ')}). Verifying several logs needs a decision about how their ` +
+        'outcomes combine into one exit code, which is not settled yet.',
+    );
+  }
+
+  return { kind: 'verify', file, quiet: flags.includes('--quiet') };
+}
+
+export const USAGE = `pandalog — flight data verification
+
+Usage:
+  pandalog verify <log.bin> [--quiet]
+  pandalog --help
+  pandalog --version
+
+Ingests an ArduPilot DataFlash log, detects events, runs the analysis rules and
+verifies the result against the built-in requirement set. The full result is
+written to stdout as JSON; a human summary goes to stderr, so redirecting stdout
+gives a clean document.
+
+Options:
+  --quiet      Suppress the stderr summary. The JSON is still written.
+  -h, --help   Show this help.
+  --version    Print the version.
+
+Exit codes:
+  0   Every requirement that applied passed.
+  1   At least one requirement FAILED.
+  2   Nothing failed, but nothing was conclusively verified either — every
+      requirement was INCONCLUSIVE or NOT_APPLICABLE. This is deliberately not
+      a success: no evidence is not a pass.
+  64  The command line could not be understood.
+  65  The log could not be read or parsed.
+  70  An unexpected internal failure.
+
+The built-in requirement set is provisional: none of its criteria trace to a
+flight-test document. A PASS means a placeholder criterion was met.
+`;

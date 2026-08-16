@@ -1,7 +1,7 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-E complete; F next.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-G complete; H next.**
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -194,7 +194,15 @@ contract on a user's own requirements exactly as it does on these.
 
 ---
 
-## Phase G — CLI
+## Phase G — CLI ✅ complete
+
+Verified 2026-08-16: `pnpm verify` green, 672 tests, and every exit path exercised as a real
+process against the built binary.
+
+**Scope note:** `pandalog verify` takes one log at a time. Verifying a directory of logs is a real
+CI need, but how several flights' outcomes combine into one exit status is a product decision, so
+the CLI rejects a second file with an explicit message rather than silently verifying the first.
+Report output waits for Phase K, as this section permits.
 
 **Package:** `@pandalog/cli`
 
