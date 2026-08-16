@@ -1,0 +1,84 @@
+[
+  {
+    "id": "events:logged-message:logged-message@0.000000#0",
+    "type": "logged-message",
+    "t_start_seconds": 0,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:logged-message",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:message",
+      "Message": "ArduCopter V4.5.0 (synthetic fixture)"
+    }
+  },
+  {
+    "id": "events:mode-change:mode-change@0.100000#0",
+    "type": "mode-change",
+    "t_start_seconds": 0.1,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:mode-change",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:mode-change",
+      "Mode": 0,
+      "ModeNum": 0,
+      "Rsn": 1
+    }
+  },
+  {
+    "id": "events:mode-change:mode-change@1.500000#1",
+    "type": "mode-change",
+    "t_start_seconds": 1.5,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:mode-change",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:mode-change",
+      "Mode": 5,
+      "ModeNum": 5,
+      "Rsn": 1
+    }
+  },
+  {
+    "id": "events:logged-error:logged-error@2.000000#0",
+    "type": "logged-error",
+    "t_start_seconds": 2,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:logged-error",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:error",
+      "Subsys": 11,
+      "ECode": 2
+    }
+  },
+  {
+    "id": "events:mode-change:mode-change@2.500000#2",
+    "type": "mode-change",
+    "t_start_seconds": 2.5,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:mode-change",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:mode-change",
+      "Mode": 6,
+      "ModeNum": 6,
+      "Rsn": 4
+    }
+  }
+]

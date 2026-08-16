@@ -1,0 +1,25 @@
+[
+  {
+    "id": "events:gps-fix-loss:gps-fix-loss@0.800000#0",
+    "type": "gps-fix-loss",
+    "t_start_seconds": 0.8,
+    "t_end_seconds": 1.2,
+    "sourceSignalIds": [
+      "gps.fix_type"
+    ],
+    "detector": {
+      "name": "events:gps-fix-loss",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "worstFixType": 1,
+      "durationSeconds": 0.3999999999999999,
+      "sampleCount": 3,
+      "containsGap": false,
+      "thresholdFixType": 3,
+      "thresholdBasis": "spec:ardupilot-gps-status",
+      "minDurationSeconds": 0.2,
+      "minDurationBasis": "provisional"
+    }
+  }
+]

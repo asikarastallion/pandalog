@@ -15,4 +15,4 @@ CLAUDE.md
 
 # Golden fixture outputs are generated artifacts compared byte-for-byte by the tests. Formatting
 # them would rewrite the expected content and break the comparison they exist to make.
-fixtures/**/*.expected.json
+fixtures/**/*.json

@@ -42,6 +42,18 @@ importers:
         specifier: workspace:*
         version: link:../schema
 
+  packages/events:
+    dependencies:
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/query':
+        specifier: workspace:*
+        version: link:../query
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/ingestion:
     dependencies:
       '@pandalog/core-domain':

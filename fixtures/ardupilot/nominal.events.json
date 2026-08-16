@@ -1,0 +1,19 @@
+[
+  {
+    "id": "events:mode-change:mode-change@0.000000#0",
+    "type": "mode-change",
+    "t_start_seconds": 0,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:mode-change",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:mode-change",
+      "Mode": 5,
+      "ModeNum": 5,
+      "Rsn": 1
+    }
+  }
+]

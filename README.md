@@ -23,8 +23,8 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A, B and C complete;
-D — Events, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through D complete;
+E — Analysis, next.**
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package

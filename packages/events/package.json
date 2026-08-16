@@ -1,0 +1,25 @@
+{
+  "name": "@pandalog/events",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Flight event detection engine. Layer 5, platform neutral.",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@pandalog/core-domain": "workspace:*",
+    "@pandalog/query": "workspace:*",
+    "@pandalog/schema": "workspace:*"
+  }
+}

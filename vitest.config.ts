@@ -14,6 +14,7 @@ export default defineConfig({
       '@pandalog/ingestion': pkgSrc('ingestion'),
       '@pandalog/parser-ardupilot': pkgSrc('parser-ardupilot'),
       '@pandalog/query': pkgSrc('query'),
+      '@pandalog/events': pkgSrc('events'),
     },
   },
   test: {

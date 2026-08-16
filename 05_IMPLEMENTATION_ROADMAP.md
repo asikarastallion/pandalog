@@ -1,7 +1,7 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A, B, C — complete; D next.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-D complete; E next.**
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -111,7 +111,11 @@ interpolation never produces a value outside its supporting samples' range.
 
 ---
 
-## Phase D — Events
+## Phase D — Events ✅ complete
+
+Verified 2026-08-16: `pnpm verify` green, 448 tests. Detector thresholds carry their basis in the
+event payload; the vibration threshold is declared `provisional` rather than presented as settled
+(doc 03 §4).
 
 **Package:** `@pandalog/events`
 
