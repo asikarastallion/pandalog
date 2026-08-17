@@ -14,7 +14,7 @@
  * typed arrays are also transferable, so `postMessage` can move the samples instead of copying
  * them, which is the point of doing the work off the main thread in the first place.
  */
-import type { Finding, Hypothesis } from '@pandalog/analysis';
+import type { Finding, Hypothesis, RuleExecution } from '@pandalog/analysis';
 import {
   createCanonicalFlightDataset,
   createSignalFromColumns,
@@ -58,6 +58,7 @@ export interface TransferableResult {
   readonly findings: readonly Finding[];
   readonly hypotheses: readonly Hypothesis[];
   readonly notApplicableRuleIds: readonly string[];
+  readonly executedRules: readonly RuleExecution[];
   readonly verification: VerificationReport;
 }
 
@@ -117,6 +118,7 @@ export function encodeResult(result: PipelineResult): TransferableResult {
     findings: result.findings,
     hypotheses: result.hypotheses,
     notApplicableRuleIds: result.notApplicableRuleIds,
+    executedRules: result.executedRules,
     verification: result.verification,
   };
 }
@@ -134,6 +136,7 @@ export function decodeResult(transferable: TransferableResult): PipelineResult {
     findings: transferable.findings,
     hypotheses: transferable.hypotheses,
     notApplicableRuleIds: transferable.notApplicableRuleIds,
+    executedRules: transferable.executedRules,
     verification: transferable.verification,
   };
 }

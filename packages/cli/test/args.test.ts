@@ -15,6 +15,7 @@ describe('parseArgs', () => {
       kind: 'verify',
       file: 'flight.bin',
       quiet: false,
+      format: 'json',
     });
   });
 
@@ -23,7 +24,7 @@ describe('parseArgs', () => {
     [['verify', '--quiet', 'f.bin']],
     [['verify', 'f.bin', '--quiet']],
   ])('accepts --quiet anywhere in %j', (argv) => {
-    expect(parseArgs(argv)).toEqual({ kind: 'verify', file: 'f.bin', quiet: true });
+    expect(parseArgs(argv)).toEqual({ kind: 'verify', file: 'f.bin', quiet: true, format: 'json' });
   });
 
   it.each([['--help'], ['-h'], ['help']])('treats %s as a help request', (flag) => {
@@ -63,5 +64,42 @@ describe('parseArgs', () => {
       expect(parsed.kind).toBe('usage-error');
       expect(parsed.kind === 'usage-error' && parsed.message).toContain('b.bin');
     });
+  });
+});
+
+describe('--format', () => {
+  it('defaults to the JSON document, so existing invocations are unchanged', () => {
+    expect(parseArgs(['verify', 'log.bin'])).toEqual({
+      kind: 'verify',
+      file: 'log.bin',
+      quiet: false,
+      format: 'json',
+    });
+  });
+
+  it('accepts a markdown report', () => {
+    expect(parseArgs(['verify', 'log.bin', '--format=markdown'])).toEqual({
+      kind: 'verify',
+      file: 'log.bin',
+      quiet: false,
+      format: 'markdown',
+    });
+  });
+
+  it('rejects a format it cannot produce, rather than falling back to JSON', () => {
+    // A silent fallback would hand a CI step a JSON document where it asked for a report, and the
+    // step would carry on and archive the wrong artifact.
+    const parsed = parseArgs(['verify', 'log.bin', '--format=pdf']);
+
+    expect(parsed.kind).toBe('usage-error');
+    expect(parsed.kind === 'usage-error' && parsed.message).toMatch(/pdf/);
+  });
+
+  it('rejects --format with nothing after it', () => {
+    expect(parseArgs(['verify', 'log.bin', '--format']).kind).toBe('usage-error');
+  });
+
+  it('still takes one log at a time when a format is given', () => {
+    expect(parseArgs(['verify', 'a.bin', 'b.bin', '--format=markdown']).kind).toBe('usage-error');
   });
 });

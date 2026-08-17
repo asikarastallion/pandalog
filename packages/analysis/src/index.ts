@@ -33,6 +33,7 @@ export type {
   AnalysisResult,
   AnalysisRule,
   RuleDocumentation,
+  RuleExecution,
   RuleRegistry,
   RuleResult,
 } from './rule.js';

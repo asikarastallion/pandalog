@@ -102,11 +102,30 @@ export function createRuleRegistry(rules: Iterable<AnalysisRule> = []): RuleRegi
   return registry;
 }
 
+/**
+ * One rule, and what became of it on this flight.
+ *
+ * Doc 04 §7 requires every report to embed the rule-set version it was produced under. Findings
+ * carry their own `ruleVersion`, but only rules that *fired* leave a finding — so without this a
+ * rule that applied and found nothing is indistinguishable from a rule that was never registered,
+ * and a report cannot state what the flight was actually checked against. "Checked and clean" and
+ * "never checked" are the same distinction doc 03 §3 draws between PASS and INCONCLUSIVE, one
+ * layer down.
+ */
+export interface RuleExecution {
+  readonly id: string;
+  readonly version: string;
+  /** False when `appliesWhen` declined; those ids also appear in `notApplicableRuleIds`. */
+  readonly applied: boolean;
+}
+
 export interface AnalysisResult {
   readonly findings: readonly Finding[];
   readonly hypotheses: readonly Hypothesis[];
   /** Rules that did not apply to this flight, and are therefore silent rather than passing. */
   readonly notApplicableRuleIds: readonly string[];
+  /** Every rule in the registry with the version it ran at, ordered by id (doc 03 §6). */
+  readonly executedRules: readonly RuleExecution[];
 }
 
 /**
@@ -119,9 +138,13 @@ export function runAnalysis(registry: RuleRegistry, context: AnalysisContext): A
   const findings: Finding[] = [];
   const hypotheses: Hypothesis[] = [];
   const notApplicableRuleIds: string[] = [];
+  const executedRules: RuleExecution[] = [];
 
   for (const rule of registry.rules) {
-    if (!rule.appliesWhen(context)) {
+    const applied = rule.appliesWhen(context);
+    executedRules.push(Object.freeze({ id: rule.id, version: rule.version, applied }));
+
+    if (!applied) {
       notApplicableRuleIds.push(rule.id);
       continue;
     }
@@ -137,5 +160,6 @@ export function runAnalysis(registry: RuleRegistry, context: AnalysisContext): A
     findings: Object.freeze(findings),
     hypotheses: Object.freeze(hypotheses),
     notApplicableRuleIds: Object.freeze(notApplicableRuleIds.sort()),
+    executedRules: Object.freeze(executedRules.sort((a, b) => a.id.localeCompare(b.id))),
   };
 }

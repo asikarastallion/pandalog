@@ -1,16 +1,13 @@
 {
-  "name": "@pandalog/cli",
+  "name": "@pandalog/reporting",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Headless ingest \u2192 analyse \u2192 verify for CI and automation. Layer 11, Node-specific.",
+  "description": "Renders structured analysis/verification/comparison artifacts into reproducible report documents. Performs no calculation. Layer 10, platform neutral.",
   "license": "UNLICENSED",
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "pandalog": "./dist/bin.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -22,8 +19,7 @@
   ],
   "dependencies": {
     "@pandalog/analysis": "workspace:*",
-    "@pandalog/pipeline": "workspace:*",
-    "@pandalog/reporting": "workspace:*",
+    "@pandalog/comparison": "workspace:*",
     "@pandalog/schema": "workspace:*",
     "@pandalog/verification": "workspace:*"
   }

@@ -195,3 +195,49 @@ describe('help and version', () => {
     expect(CLI_VERSION).toBe(manifest.version);
   });
 });
+
+describe('pandalog verify --format=markdown', () => {
+  it('writes a report to stdout instead of the JSON document', async () => {
+    const { exitCode, stdout } = await run(['verify', 'nominal.bin', '--format=markdown']);
+
+    expect(exitCode).toBe(EXIT.OK);
+    expect(stdout.startsWith('# Flight analysis')).toBe(true);
+    // Not merely "different from JSON": a consumer redirecting stdout must get one document, and
+    // markdown that happened to parse as JSON would mean the two formats had been mixed.
+    expect(() => {
+      JSON.parse(stdout);
+    }).toThrow();
+  });
+
+  it('keeps the exit code the verification decided, whatever the format', async () => {
+    // The format is a rendering choice. If it could change the exit code, a CI step that switched
+    // to archiving reports would start passing builds it used to fail.
+    for (const file of ['nominal.bin', 'degraded-flight.bin', 'mode-change-error.bin']) {
+      const asJson = await run(['verify', file, '--quiet']);
+      const asMarkdown = await run(['verify', file, '--quiet', '--format=markdown']);
+
+      expect(asMarkdown.exitCode, file).toBe(asJson.exitCode);
+    }
+  });
+
+  it('still prints the provisional-criteria warning to stderr', async () => {
+    const { stderr } = await run(['verify', 'degraded-flight.bin', '--format=markdown']);
+
+    expect(stderr).toContain('provisional');
+  });
+
+  it('produces byte-identical reports on two runs at the same instant', async () => {
+    const first = await run(['verify', 'degraded-flight.bin', '--format=markdown']);
+    const second = await run(['verify', 'degraded-flight.bin', '--format=markdown']);
+
+    expect(first.stdout).toBe(second.stdout);
+  });
+
+  it('refuses a format it cannot produce rather than silently writing JSON', async () => {
+    const { exitCode, stdout, stderr } = await run(['verify', 'nominal.bin', '--format=pdf']);
+
+    expect(exitCode).toBe(EXIT.USAGE);
+    expect(stdout).toBe('');
+    expect(stderr).toContain('pdf');
+  });
+});

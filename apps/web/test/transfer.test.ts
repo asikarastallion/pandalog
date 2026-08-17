@@ -46,6 +46,18 @@ describe.each(['degraded-flight.bin', 'gps-glitch.bin'])('%s survives the bounda
     restored = roundTrip(original);
   });
 
+  it('keeps every field of the pipeline result, so a new one cannot be silently dropped', () => {
+    // The failure this guards: `PipelineResult` grows a field, the encoder is not updated, and the
+    // browser quietly gets a result missing something the CLI has. Comparing key sets catches that
+    // for any future field without anyone remembering to add a case here.
+    expect(Object.keys(restored).sort()).toEqual(Object.keys(original).sort());
+  });
+
+  it('keeps the rules the flight was checked against', () => {
+    expect(restored.executedRules).toEqual(original.executedRules);
+    expect(restored.executedRules.length).toBeGreaterThan(0);
+  });
+
   it('keeps every signal', () => {
     expect([...restored.dataset.signals.keys()].sort()).toEqual(
       [...original.dataset.signals.keys()].sort(),

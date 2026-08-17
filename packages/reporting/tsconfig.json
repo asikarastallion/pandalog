@@ -1,18 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "src",
-    "outDir": "dist",
-    "types": ["node"]
-  },
+  "compilerOptions": { "composite": true, "rootDir": "src", "outDir": "dist", "types": [] },
   "include": ["src/**/*.ts"],
   "references": [
     { "path": "../schema" },
     { "path": "../analysis" },
     { "path": "../verification" },
-    { "path": "../pipeline" },
-    { "path": "../reporting" }
+    { "path": "../comparison" }
   ]
 }

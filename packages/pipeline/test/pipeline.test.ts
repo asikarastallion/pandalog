@@ -83,3 +83,29 @@ describe('runPipeline', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('provenance the report layer depends on', () => {
+  it('carries every rule that ran and the version it ran at', async () => {
+    // Doc 04 §7 requires a report to embed the rule-set version. The pipeline is the only place
+    // that knows which rules were registered, so if it drops them the report cannot state what
+    // the flight was checked against — and a rule that ran and found nothing is invisible.
+    const result = await load('nominal.bin');
+
+    expect(result.executedRules.length).toBeGreaterThan(0);
+    for (const rule of result.executedRules) {
+      expect(rule.version).toMatch(/^\d+\.\d+\.\d+/);
+    }
+    expect(result.executedRules.map((rule) => rule.id)).toEqual(
+      [...result.executedRules.map((rule) => rule.id)].sort(),
+    );
+  });
+
+  it('accounts for every registered rule, applied or not', async () => {
+    const result = await load('nominal.bin');
+    const declinedIds = result.executedRules
+      .filter((rule) => !rule.applied)
+      .map((rule) => rule.id);
+
+    expect(declinedIds).toEqual([...result.notApplicableRuleIds]);
+  });
+});

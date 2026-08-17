@@ -21,6 +21,7 @@ import {
   runAnalysis,
   type Finding,
   type Hypothesis,
+  type RuleExecution,
 } from '@pandalog/analysis';
 import { createDefaultDetectorRegistry, detectEvents, type FlightEvent } from '@pandalog/events';
 import { createAdapterRegistry, ingest } from '@pandalog/ingestion';
@@ -54,6 +55,14 @@ export interface PipelineResult {
   readonly findings: readonly Finding[];
   readonly hypotheses: readonly Hypothesis[];
   readonly notApplicableRuleIds: readonly string[];
+  /**
+   * Every rule that was registered, with the version it ran at (doc 04 §7).
+   *
+   * Carried through rather than left in `analysis` because this is the only layer that knows which
+   * rules were chosen, and a report that cannot name them cannot say what the flight was checked
+   * against.
+   */
+  readonly executedRules: readonly RuleExecution[];
   readonly verification: VerificationReport;
 }
 
@@ -93,6 +102,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     findings: analysis.findings,
     hypotheses: analysis.hypotheses,
     notApplicableRuleIds: analysis.notApplicableRuleIds,
+    executedRules: analysis.executedRules,
     verification,
   };
 }

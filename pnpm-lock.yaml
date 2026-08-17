@@ -113,6 +113,9 @@ importers:
       '@pandalog/pipeline':
         specifier: workspace:*
         version: link:../pipeline
+      '@pandalog/reporting':
+        specifier: workspace:*
+        version: link:../reporting
       '@pandalog/schema':
         specifier: workspace:*
         version: link:../schema
@@ -215,6 +218,21 @@ importers:
       '@pandalog/schema':
         specifier: workspace:*
         version: link:../schema
+
+  packages/reporting:
+    dependencies:
+      '@pandalog/analysis':
+        specifier: workspace:*
+        version: link:../analysis
+      '@pandalog/comparison':
+        specifier: workspace:*
+        version: link:../comparison
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@pandalog/verification':
+        specifier: workspace:*
+        version: link:../verification
 
   packages/schema: {}
 

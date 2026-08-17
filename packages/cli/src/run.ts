@@ -18,6 +18,7 @@ import { parseArgs, USAGE, type VerifyCommand } from './args.js';
 import { EXIT, exitCodeFor, type ExitCode } from './exit-codes.js';
 import { buildDocument, summarise } from './output.js';
 import { runPipeline } from '@pandalog/pipeline';
+import { buildReport, renderMarkdown } from '@pandalog/reporting';
 
 /** The package version, asserted against `package.json` by a test so the two cannot drift. */
 export const CLI_VERSION = '0.1.0';
@@ -52,9 +53,16 @@ async function verify(command: VerifyCommand, environment: CliEnvironment): Prom
   }
 
   const exitCode = exitCodeFor(result.verification.summary);
-  const document = buildDocument({ version: CLI_VERSION, result, exitCode });
 
-  environment.stdout(`${JSON.stringify(document, null, 2)}\n`);
+  // Both formats are rendered from the same run, so the archived report and the machine-readable
+  // document cannot disagree about the flight (doc 04 §7).
+  if (command.format === 'markdown') {
+    environment.stdout(renderMarkdown(buildReport({ ...result, now: environment.now })));
+  } else {
+    environment.stdout(
+      `${JSON.stringify(buildDocument({ version: CLI_VERSION, result, exitCode }), null, 2)}\n`,
+    );
+  }
 
   if (!command.quiet) {
     environment.stderr(

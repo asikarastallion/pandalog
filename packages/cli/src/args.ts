@@ -7,10 +7,24 @@
  * the few lines saved.
  */
 
+/**
+ * What `verify` writes to stdout.
+ *
+ * `json` is the machine-readable pipeline document a CI step consumes; `markdown` is the
+ * reproducible report a human archives (doc 04 §7). Both come from the same run, so a step that
+ * produces one and a step that produces the other cannot disagree about the flight.
+ */
+export const OUTPUT_FORMATS = ['json', 'markdown'] as const;
+
+export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
+
+const FORMAT_SET: ReadonlySet<string> = new Set<string>(OUTPUT_FORMATS);
+
 export interface VerifyCommand {
   readonly kind: 'verify';
   readonly file: string;
   readonly quiet: boolean;
+  readonly format: OutputFormat;
 }
 
 export type ParsedArgs =
@@ -44,7 +58,20 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     return { kind: 'version' };
   }
 
-  const unknownFlag = flags.find((flag) => flag !== '--quiet');
+  // `--format=markdown` rather than `--format markdown`: a separated value would land in the
+  // positional list and be mistaken for a second log file, which the check below would then
+  // reject with a confusing message about verifying several logs at once.
+  const formatFlag = flags.find((flag) => flag.startsWith('--format'));
+  const format = formatFlag?.slice('--format='.length) ?? 'json';
+
+  if (formatFlag !== undefined && !FORMAT_SET.has(format)) {
+    return usageError(
+      `Unknown output format ${JSON.stringify(formatFlag.replace('--format=', ''))}. ` +
+        `Supported formats: ${OUTPUT_FORMATS.join(', ')}.`,
+    );
+  }
+
+  const unknownFlag = flags.find((flag) => flag !== '--quiet' && !flag.startsWith('--format='));
   if (unknownFlag !== undefined) {
     return usageError(`Unknown option ${unknownFlag}. Run "pandalog --help" for usage.`);
   }
@@ -68,25 +95,34 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
     );
   }
 
-  return { kind: 'verify', file, quiet: flags.includes('--quiet') };
+  return {
+    kind: 'verify',
+    file,
+    quiet: flags.includes('--quiet'),
+    format: format as OutputFormat,
+  };
 }
 
 export const USAGE = `pandalog — flight data verification
 
 Usage:
-  pandalog verify <log.bin> [--quiet]
+  pandalog verify <log.bin> [--quiet] [--format=json|markdown]
   pandalog --help
   pandalog --version
 
 Ingests an ArduPilot DataFlash log, detects events, runs the analysis rules and
-verifies the result against the built-in requirement set. The full result is
-written to stdout as JSON; a human summary goes to stderr, so redirecting stdout
-gives a clean document.
+verifies the result against the built-in requirement set. The result is written
+to stdout; a human summary goes to stderr, so redirecting stdout gives a clean
+document.
 
 Options:
-  --quiet      Suppress the stderr summary. The JSON is still written.
-  -h, --help   Show this help.
-  --version    Print the version.
+  --quiet             Suppress the stderr summary. Output is still written.
+  --format=json       The full pipeline result as JSON. The default.
+  --format=markdown   A reproducible report, provenance-stamped. Two runs over
+                      the same log and versions produce byte-identical output
+                      apart from the generation timestamp.
+  -h, --help          Show this help.
+  --version           Print the version.
 
 Exit codes:
   0   Every requirement that applied passed.

@@ -248,6 +248,7 @@ describe('the repository itself obeys the manifest', () => {
       '@pandalog/parser-ardupilot',
       '@pandalog/pipeline',
       '@pandalog/query',
+      '@pandalog/reporting',
       '@pandalog/schema',
       '@pandalog/verification',
       '@pandalog/web',

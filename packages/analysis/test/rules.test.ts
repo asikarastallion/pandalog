@@ -293,6 +293,44 @@ describe('runAnalysis', () => {
     ]);
   });
 
+  it('records every rule it ran and the version it ran at', () => {
+    // Doc 04 §7 requires a report to embed the rule-set version. Without this, a rule that applied
+    // and found nothing leaves no trace at all — indistinguishable from a rule that was never
+    // registered — so a report could not state what the flight was actually checked against.
+    const result = runAnalysis(registry, contextOf(emptyDataset()));
+
+    expect(result.executedRules).toEqual([
+      { id: 'analysis:attitude-tracking-error', version: '1.0.0', applied: false },
+      { id: 'analysis:gps-availability', version: '1.0.0', applied: false },
+      { id: 'analysis:vibration-level', version: '1.0.0', applied: false },
+    ]);
+  });
+
+  it('distinguishes a rule that applied and stayed silent from one that did not apply', () => {
+    const registryOfOne = createRuleRegistry([GPS_AVAILABILITY_RULE]);
+    // The dataset carries the signal the rule needs, so it applies; there is no fix-loss event, so
+    // it produces nothing. "Checked and clean" is not "never checked".
+    const context = contextOf(vibrationDataset(['gps.fix_type']), []);
+
+    const result = runAnalysis(registryOfOne, context);
+
+    expect(result.findings).toEqual([]);
+    expect(result.notApplicableRuleIds).toEqual([]);
+    expect(result.executedRules).toEqual([
+      { id: 'analysis:gps-availability', version: '1.0.0', applied: true },
+    ]);
+  });
+
+  it('lists executed rules in a stable order regardless of registration order', () => {
+    const forward = createRuleRegistry([GPS_AVAILABILITY_RULE, VIBRATION_LEVEL_RULE]);
+    const reversed = createRuleRegistry([VIBRATION_LEVEL_RULE, GPS_AVAILABILITY_RULE]);
+    const context = contextOf(emptyDataset());
+
+    expect(runAnalysis(forward, context).executedRules).toEqual(
+      runAnalysis(reversed, context).executedRules,
+    );
+  });
+
   it('is deterministic regardless of registration order', () => {
     const forward = createRuleRegistry([GPS_AVAILABILITY_RULE, VIBRATION_LEVEL_RULE]);
     const reversed = createRuleRegistry([VIBRATION_LEVEL_RULE, GPS_AVAILABILITY_RULE]);

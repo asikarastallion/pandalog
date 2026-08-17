@@ -325,7 +325,33 @@ axis (signals, events, findings, verification) — a self-consistency test.
 
 ---
 
-## Phase K — Reporting
+## Phase K — Reporting ✅ complete
+
+Verified 2026-08-17: `pnpm verify` green, 1020 tests, reporting package at 100% statement coverage.
+`pandalog verify <log> --format=markdown` renders the report from the same run that produces the
+JSON document, so the archived report and the machine-readable result cannot disagree.
+
+**A traceability gap in `@pandalog/analysis` was found and fixed here.** `AnalysisResult` recorded
+findings and `notApplicableRuleIds`, so a rule that *applied and found nothing* left no trace at
+all — indistinguishable from a rule that was never registered. Doc 04 §7 requires every report to
+embed the rule-set version, and that was unproducible: the report could not say what the flight had
+been checked against. `AnalysisResult` now carries `executedRules` (id, version, applied), the
+pipeline threads it through, and the Worker transfer layer carries it into the browser. "Checked and
+clean" versus "never checked" is doc 03 §3's PASS/INCONCLUSIVE distinction one layer down.
+
+ADR-0013 records the two decisions that keep doc 04 §7 enforceable rather than aspirational: the
+document **embeds the artifacts unchanged** rather than projecting them into report-shaped copies,
+so "no number was invented" is deep-equality against the input; and reports render **canonical units
+only**, because a converted value would be a number in the report and in no artifact. The second
+costs readability and is taken deliberately — `apps/web` converts freely because a screen is read
+and closed, while a report is filed and re-read.
+
+The acceptance criterion is enforced with two different clocks, since a reproducibility test that
+passes the same `now` twice would also pass for a report that embedded the clock in ten places.
+Seven injected defects were caught (a renderer scaling a measurement, a threshold printed without
+its basis, provenance dropping the rule versions, a hard-coded timestamp, rounding every quantity to
+one decimal, and two more); an eighth — rendering a missing quantity as `0` — was **not** caught,
+which exposed a real hole in the suite against doc 04 §1 rule 6, and a test was added for it.
 
 **Package:** `@pandalog/reporting`
 

@@ -23,8 +23,8 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through I complete;
-J — Comparison, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through K complete;
+L — AI, next.**
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
@@ -59,7 +59,7 @@ CLI's own stderr summary says so rather than leaving it to be inferred.
 | [`@pandalog/verification`](packages/verification)         | 7     | Requirement definitions and evaluation.                                        | F ✅  |
 | [`@pandalog/pipeline`](packages/pipeline)                 | 8     | Ingest → detect → analyse → verify, composed once for every app.               | H ✅  |
 | [`@pandalog/comparison`](packages/comparison)             | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J ✅  |
-| `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
+| [`@pandalog/reporting`](packages/reporting)               | 10    | Reproducible report rendering (no calculation).                                | K ✅  |
 | `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
 | [`@pandalog/cli`](packages/cli)                           | 11    | Headless ingest → analyze → verify → report.                                   | G ✅  |
 | [`apps/web`](apps/web)                                    | 11    | Vue investigation workspace.                                                   | H ✅  |
@@ -113,6 +113,25 @@ document. The exit status is what a CI pipeline reads:
 or NOT_APPLICABLE was not verified, and a green pipeline would report confidence PandaLog does not
 have. Operational failures use `sysexits.h` values so 0–2 stay reserved for what the verification
 actually concluded — a CI script can tell "the aircraft failed" from "the tool could not run".
+
+### Archiving a report
+
+```bash
+node packages/cli/dist/bin.js verify fixtures/ardupilot/degraded-flight.bin \
+  --format=markdown > report.md
+```
+
+The same run, rendered for a person instead of a machine: provenance, the rules the flight was
+checked against and the versions they ran at, every finding with its evidence and the `basis` of
+every threshold, every requirement outcome with its reason, and — when a baseline was compared — the
+per-axis verdicts.
+
+Two runs over the same log at the same versions produce **byte-identical output apart from the
+generation timestamp**, which is why that timestamp is kept out of the provenance block. The report
+contains no number that is not in the analysis it reports: `@pandalog/reporting` embeds the
+artifacts verbatim rather than projecting them, and a test extracts every rendered quantity and
+requires it to be traceable to one (doc 04 §7, ADR-0013). Values are in canonical units, because a
+converted number would be one that appears in the report and nowhere else.
 
 ## Investigating a flight
 
