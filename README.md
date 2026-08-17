@@ -207,11 +207,35 @@ pnpm dev:web            # or: pnpm build && serve apps/web/dist
 ```
 
 Drop a `.BIN` onto the page. Parsing, analysis and verification run in a Web Worker in your own
-browser — there is no server to upload to. Selecting a finding opens doc 03 §5's investigation
-workflow: the evidence it rests on, the time window that evidence covers, and every signal it cites
-drawn synchronized on that window.
+browser — there is no server to upload to.
 
-Three things the workspace deliberately will not do:
+The application opens on a **landing screen** listing logs you have analysed before, kept in this
+browser's IndexedDB. What is stored is the log's own bytes, not a cached result: reopening re-runs
+the pipeline, which doc 03 §6 guarantees is byte-identical, so what you see is always what the code
+currently running concludes rather than what some earlier version did.
+
+Opening a log gives a **workspace with seven views** behind a persistent navigation rail, each
+answering one question (doc 01 §5.1):
+
+| View          | Answers                                                              |
+| ------------- | -------------------------------------------------------------------- |
+| Summary       | What is this flight, and what did the analysis conclude overall?     |
+| Plot          | What did these signals do, against each other, over time?            |
+| Map           | Where did it fly? (two modes — see below)                            |
+| 3D Playback   | What was it doing at this instant, along the path it actually flew?  |
+| Investigation | What was found, what proves it, and what were the samples behind it? |
+| Verification  | Did it meet each requirement, and on what evidence?                  |
+| Report        | The reproducible, provenance-stamped document.                       |
+
+One clock and one selection are shared across all of them: a finding opened in Investigation is the
+same instant the 3D view is showing, and switching view never resets either. That structure is a
+documented contract (doc 01 §5.1), not a layout choice — it exists so the workspace does not
+collapse back into one scrolling page the next time a view is added.
+
+Selecting a finding opens doc 03 §5's investigation workflow: the evidence it rests on, the time
+window that evidence covers, and every signal it cites drawn synchronized on that window.
+
+Four things the workspace deliberately will not do:
 
 - **Draw through missing data.** A run of samples that were never recorded breaks the line and is
   labelled as a gap. Interpolating across it would turn a GNSS dropout into a smooth glide.
@@ -221,9 +245,20 @@ Three things the workspace deliberately will not do:
 - **Fly the aircraft through a GNSS dropout.** Playback has no position while the receiver had no
   fix, and the ground track breaks rather than drawing a leg nobody recorded.
 
-The map fetches no tiles. A basemap would send the flight's coordinates to a third party every time
-someone looked at them, so the track is drawn to scale with its geographic bounds labelled instead
-(ADR-0011).
+### The map has two modes
+
+**By default it fetches nothing** — not a tile, not a stylesheet, and not the mapping library, which
+sits behind a dynamic import so declining downloads nothing at all. The track is drawn to scale in
+projected metres with its geographic bounds labelled.
+
+**A real basemap is one checkbox away**, behind a consent step that states what is sent
+(OpenStreetMap tiles), what it discloses (roughly where the aircraft flew, and when you looked),
+what is _not_ sent (the log, the findings, the outcomes), and that the choice is reversible. It is
+never on by default and never inferred.
+
+The reason it is asked rather than assumed: tile coordinates _are_ the flight's location, which is a
+materially different disclosure from fetching a font. The original decision was "no basemap, ever" —
+right about the default, and too strong as the only option. ADR-0011 records the revision.
 
 ## Architecture
 
