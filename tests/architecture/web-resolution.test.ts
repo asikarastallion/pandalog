@@ -22,18 +22,48 @@ const WEB = path.join(REPO_ROOT, 'apps', 'web');
 
 const read = (file: string): string => readFileSync(path.join(WEB, file), 'utf8');
 
-/** Workspace packages the app declares as dependencies. */
-function declaredWorkspaceDependencies(): string[] {
-  const manifest = JSON.parse(read('package.json')) as {
-    dependencies?: Record<string, string>;
-  };
+const workspaceDepsOf = (manifestJson: string): string[] => {
+  const manifest = JSON.parse(manifestJson) as { dependencies?: Record<string, string> };
   return Object.entries(manifest.dependencies ?? {})
     .filter(([name, range]) => name.startsWith('@pandalog/') && range.startsWith('workspace:'))
-    .map(([name]) => name)
-    .sort();
+    .map(([name]) => name);
+};
+
+/**
+ * Every workspace package the app pulls in, **transitively**.
+ *
+ * The transitive closure, not the declared list: `apps/web` imports `@pandalog/reporting`, which
+ * imports `@pandalog/comparison`, and TypeScript has to resolve that second hop too. Checking only
+ * direct dependencies is what let the second instance of this bug through — the mapping for the
+ * package the app names was added, and the one it reaches through that package was not.
+ */
+function reachableWorkspacePackages(): string[] {
+  const seen = new Set<string>();
+  const queue = workspaceDepsOf(read('package.json'));
+
+  while (queue.length > 0) {
+    const name = queue.shift();
+    if (name === undefined || seen.has(name)) {
+      continue;
+    }
+    seen.add(name);
+
+    const short = name.replace('@pandalog/', '');
+    try {
+      queue.push(
+        ...workspaceDepsOf(
+          readFileSync(path.join(REPO_ROOT, 'packages', short, 'package.json'), 'utf8'),
+        ),
+      );
+    } catch {
+      // A package with no manifest is a different failure, and `dependency-direction` owns it.
+    }
+  }
+
+  return [...seen].sort();
 }
 
-const dependencies = declaredWorkspaceDependencies();
+const dependencies = reachableWorkspacePackages();
 
 describe('apps/web resolves every workspace package it depends on', () => {
   it('declares some, so this test is not vacuous', () => {

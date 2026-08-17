@@ -31,6 +31,7 @@
       "@pandalog/analysis": ["../../packages/analysis/src/index.ts"],
       "@pandalog/verification": ["../../packages/verification/src/index.ts"],
       "@pandalog/pipeline": ["../../packages/pipeline/src/index.ts"],
+      "@pandalog/comparison": ["../../packages/comparison/src/index.ts"],
       "@pandalog/reporting": ["../../packages/reporting/src/index.ts"]
     }
   },
