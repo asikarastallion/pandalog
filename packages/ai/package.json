@@ -1,0 +1,26 @@
+{
+  "name": "@pandalog/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Opt-in explanatory layer over the evidence chain. Explains, summarizes, correlates and proposes hypotheses; never overrides a deterministic result. Layer 10.",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@pandalog/analysis": "workspace:*",
+    "@pandalog/comparison": "workspace:*",
+    "@pandalog/schema": "workspace:*",
+    "@pandalog/verification": "workspace:*"
+  }
+}

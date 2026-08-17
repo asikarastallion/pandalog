@@ -20,6 +20,7 @@
       "@pandalog/pipeline": ["./packages/pipeline/src/index.ts"],
       "@pandalog/comparison": ["./packages/comparison/src/index.ts"],
       "@pandalog/reporting": ["./packages/reporting/src/index.ts"],
+      "@pandalog/ai": ["./packages/ai/src/index.ts"],
       "@pandalog/cli": ["./packages/cli/src/index.ts"]
     }
   },

@@ -23,8 +23,9 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through K complete;
-L — AI, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). **A through L are complete** — the pipeline
+runs end to end, from a dropped `.BIN` to a provenance-stamped report, with an opt-in explanatory
+layer on top that cannot overrule any of it.
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
@@ -60,7 +61,7 @@ CLI's own stderr summary says so rather than leaving it to be inferred.
 | [`@pandalog/pipeline`](packages/pipeline)                 | 8     | Ingest → detect → analyse → verify, composed once for every app.               | H ✅  |
 | [`@pandalog/comparison`](packages/comparison)             | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J ✅  |
 | [`@pandalog/reporting`](packages/reporting)               | 10    | Reproducible report rendering (no calculation).                                | K ✅  |
-| `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
+| [`@pandalog/ai`](packages/ai)                             | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L ✅  |
 | [`@pandalog/cli`](packages/cli)                           | 11    | Headless ingest → analyze → verify → report.                                   | G ✅  |
 | [`apps/web`](apps/web)                                    | 11    | Vue investigation workspace.                                                   | H ✅  |
 
@@ -191,6 +192,12 @@ Not style preferences — this is why the packages are split the way they are.
   `DIFFERENT` or `INCOMPARABLE`, and an axis that could not be examined is never reported as
   showing no difference — the same refusal verification makes about evidence, one stage further
   along (ADR-0012).
+- **The AI cannot overrule any of it.** `@pandalog/ai` is opt-in, sends nothing until a user
+  configures a provider and supplies a key, and never sees a raw signal. Every answer is checked
+  against the evidence before it is returned: a claim carrying a number the analysis did not
+  produce, an evidence reference that does not resolve, or a statement asserting an outcome other
+  than the recorded one is removed and listed (ADR-0014). Deleting the package leaves everything
+  else building and passing, which is a test rather than a promise.
 - **Analysis never depends on the UI.** Every engine must be runnable from a test or a CLI.
 - **Evidence is mandatory.** A finding without at least one evidence reference cannot be
   constructed; missing evidence in verification is `INCONCLUSIVE`, never `PASS`.

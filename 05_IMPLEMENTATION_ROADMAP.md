@@ -1,7 +1,8 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-I complete; J next.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-L complete.** The roadmap is
+delivered end to end; what remains is recorded as known gaps in each phase and in `README.md`.
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -365,7 +366,28 @@ provenance).
 
 ---
 
-## Phase L — AI
+## Phase L — AI ✅ complete
+
+Verified 2026-08-17: `pnpm verify` green, 1082 tests, `@pandalog/ai` at 98% statement coverage. The
+acceptance criterion was checked by actually removing the package rather than by reasoning about
+it — with `packages/ai` moved out of the tree, `tsc -b packages/cli` exited 0, `vue-tsc` on
+`apps/web` exited 0, and 501 tests across cli, web, reporting, comparison, verification, analysis
+and pipeline passed unchanged.
+
+**Doc 04 §1 rule 10 turned out to be under-enforced as written**, and §1 is amended in this change.
+It recorded the check as "`AiAnswer` has no field that overrides a `VerificationOutcome` or
+fabricates a `Finding`" — true, and half the job. Every field of `AiAnswer` is free text, so a model
+cannot return `severity: "CRITICAL"` but can return the sentence *"Peak vibration reached 91.7
+m/s^2, so REQ-VIB-001 is effectively a PASS"*, which invents a measurement and overturns an outcome
+inside a field the type permits. It is worse than a structured override because it reads like prose
+an engineer would trust.
+
+ADR-0014 records the answer: the identical traceability check `@pandalog/reporting` passes at build
+time runs here **at runtime, on every answer**. Numbers must already appear in the context (allowing
+rounding to the precision the model itself wrote), evidence references must be structurally
+identical to ones the deterministic layers produced, and a claim naming a requirement must not
+assert an outcome other than the recorded one. Rejections are removed from the answer and listed,
+per claim rather than per answer — a guard that discards good output is one a caller turns off.
 
 **Package:** `@pandalog/ai`
 

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": [],
+    // The one package the manifest marks `platformNeutral: false`, because reaching a provider is
+    // its entire purpose (doc 01 §3 rule 4). `DOM` rather than `node`: `fetch`, `Response` and
+    // `URL` are the same globals in a browser and in Node 18+, so this compiles for both — which
+    // matters, since `apps/web` is where a user's key would be entered.
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../schema" },
+    { "path": "../analysis" },
+    { "path": "../verification" },
+    { "path": "../comparison" }
+  ]
+}

@@ -90,6 +90,21 @@ importers:
         specifier: ^3.5.41
         version: 3.5.41(typescript@5.9.3)
 
+  packages/ai:
+    dependencies:
+      '@pandalog/analysis':
+        specifier: workspace:*
+        version: link:../analysis
+      '@pandalog/comparison':
+        specifier: workspace:*
+        version: link:../comparison
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@pandalog/verification':
+        specifier: workspace:*
+        version: link:../verification
+
   packages/analysis:
     dependencies:
       '@pandalog/core-domain':

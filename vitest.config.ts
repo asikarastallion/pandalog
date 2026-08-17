@@ -24,6 +24,7 @@ export default defineConfig({
       '@pandalog/pipeline': pkgSrc('pipeline'),
       '@pandalog/comparison': pkgSrc('comparison'),
       '@pandalog/reporting': pkgSrc('reporting'),
+      '@pandalog/ai': pkgSrc('ai'),
       '@pandalog/web': path.resolve(import.meta.dirname, 'apps', 'web', 'src'),
       '@pandalog/cli': pkgSrc('cli'),
     },

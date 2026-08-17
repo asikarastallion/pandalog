@@ -239,6 +239,7 @@ describe('the repository itself obeys the manifest', () => {
     // The packages built so far. This guards the failure mode where a path typo makes every
     // package scan zero files and the check passes vacuously.
     expect(withSource.map((entry) => entry.package).sort()).toEqual([
+      '@pandalog/ai',
       '@pandalog/analysis',
       '@pandalog/cli',
       '@pandalog/comparison',
