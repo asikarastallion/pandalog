@@ -21,6 +21,38 @@ the user's machine; nothing is uploaded by default. See
 [`01_SYSTEM_ARCHITECTURE.md`](01_SYSTEM_ARCHITECTURE.md) §2 for the deployment topology and why
 every core package is built to run identically in a browser Worker or under Node.
 
+## Try it
+
+**<https://asikarastallion.github.io/pandalog/>** — no install, no sign-in, no upload.
+
+The page runs the entire pipeline in your browser tab: it decodes the log, derives signals, detects
+events, applies the analysis rules and verifies the requirement set, then lets you open any finding
+down to the samples behind it. There is no server involved, so the log never leaves your machine —
+that is not a policy, it is that [there is nowhere to send it](#why-github-pages).
+
+### Sample logs
+
+Download any of these from GitHub — the link starts the download directly, no `git clone` — then
+drag it onto the page. Each one exercises a different outcome.
+
+| Log                                                                                                                              | What it shows                                                                                                                                                                                                                                   | Verification                     |
+| -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| [`nominal.bin`](https://github.com/asikarastallion/pandalog/raw/main/fixtures/ardupilot/nominal.bin) (1.7 KB)                    | A clean flight. No rule fires.                                                                                                                                                                                                                  | 3 PASS, 1 NOT_APPLICABLE         |
+| [`degraded-flight.bin`](https://github.com/asikarastallion/pandalog/raw/main/fixtures/ardupilot/degraded-flight.bin) (5.8 KB)    | The interesting one: a roll-tracking excursion, a GNSS outage and a vibration excursion. 3 findings, a ground track that **breaks** where the fix was lost, and playback that has no position during the outage rather than gliding through it. | 1 PASS, 3 FAIL                   |
+| [`gps-glitch.bin`](https://github.com/asikarastallion/pandalog/raw/main/fixtures/ardupilot/gps-glitch.bin) (907 B)               | Requirements that cannot be judged from the data. Shows `INCONCLUSIVE` as its own outcome rather than folded into a pass or a fail.                                                                                                             | 2 PASS, 2 INCONCLUSIVE           |
+| [`mode-change-error.bin`](https://github.com/asikarastallion/pandalog/raw/main/fixtures/ardupilot/mode-change-error.bin) (762 B) | Mode changes and a logged error, read from the log's own records rather than derived.                                                                                                                                                           | 1 PASS, 1 FAIL, 2 NOT_APPLICABLE |
+
+Every threshold behind those outcomes is `provisional` and says so on screen — see the caveat in
+[Status](#status).
+
+### Trying a file that is not a log
+
+Worth doing, because how a tool fails is part of what it is. Drop a photo, an empty file, a text
+file renamed `.BIN`, or a log truncated mid-download. Each gives three things: what the analysis
+said verbatim, what it means for you, and the fact that nothing was partially accepted — a
+malformed log is never half-parsed and presented as a whole flight. The workspace stays usable;
+drop a real log straight afterwards and it opens normally.
+
 ## Status
 
 Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). **A through L are complete** — the pipeline
@@ -71,6 +103,35 @@ sit at the top because they consume everything beneath them (ADR-0008).
 Every package's permitted dependencies are declared in
 [`docs/architecture/dependency-layers.json`](docs/architecture/dependency-layers.json) and
 checked by a test, not left to convention (see [Enforcement](#enforcement)).
+
+## Continuous integration
+
+Every push and pull request runs [the CI workflow](.github/workflows/ci.yml); the result is on the
+commit and in the repository's **Actions** tab. Three checks, deliberately named for what they
+answer:
+
+| Check                                     | Question it answers                                                                                                                      |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Architecture boundaries**               | Is this still the shape of system the documents describe? Package layering, the UI boundary, and that nothing depends on `@pandalog/ai`. |
+| **Verify (typecheck, lint, test, build)** | `pnpm verify` plus coverage at the 80% threshold — the same command anyone runs locally, so the two cannot drift.                        |
+| **Deploy to GitHub Pages**                | Publishes the browser app, only after both of the above are green.                                                                       |
+
+The deploy job serves the artifact the verify job built rather than rebuilding it, so the bytes at
+the public URL are the bytes that passed. Nothing in the suite needs repeating by hand — the CLI's
+exit codes, report reproducibility, and the browser app's behaviour on a corrupt file are all
+asserted there. The workflow file is commented with what each part covers and why.
+
+### Why GitHub Pages
+
+The README claims there is no backend, and the hosting should make that true rather than merely
+state it. GitHub Pages serves static files and has no mechanism for running server-side code —
+there is no place to put a backend even by accident.
+
+Netlify, Vercel and Cloudflare Pages would all serve this app perfectly well, and each also offers
+serverless functions a keystroke away. That is precisely the door [ADR-0006](docs/architecture/adr/0006-no-backend.md)
+closes: the moment a "quick endpoint" is available, the architecture's central claim becomes a habit
+rather than a property. They would also add a third-party account holding a deploy token, for a
+static bundle that needs neither.
 
 ## Getting started
 
