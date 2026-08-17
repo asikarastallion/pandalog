@@ -16,3 +16,7 @@ CLAUDE.md
 # Golden fixture outputs are generated artifacts compared byte-for-byte by the tests. Formatting
 # them would rewrite the expected content and break the comparison they exist to make.
 fixtures/**/*.json
+# Golden *reports* are compared byte-for-byte too, and prettier reflows markdown tables and prose.
+# A reformatted golden would fail the comparison it exists to make — and would do so by changing
+# the expectation rather than the code, which is the wrong half to move.
+fixtures/**/*.report.md

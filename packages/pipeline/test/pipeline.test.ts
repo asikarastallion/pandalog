@@ -102,9 +102,7 @@ describe('provenance the report layer depends on', () => {
 
   it('accounts for every registered rule, applied or not', async () => {
     const result = await load('nominal.bin');
-    const declinedIds = result.executedRules
-      .filter((rule) => !rule.applied)
-      .map((rule) => rule.id);
+    const declinedIds = result.executedRules.filter((rule) => !rule.applied).map((rule) => rule.id);
 
     expect(declinedIds).toEqual([...result.notApplicableRuleIds]);
   });

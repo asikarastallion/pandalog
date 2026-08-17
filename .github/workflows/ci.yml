@@ -1,72 +1,170 @@
+# PandaLog — continuous integration and deployment.
+#
+# Everything below runs on GitHub's machines on every push and pull request. Nothing here needs to
+# be repeated by hand in a terminal; the Checks tab on a commit or PR is the whole picture.
+#
+# Read the job names in the Checks tab like this:
+#
+#   architecture  — are the package boundaries still real? (see the job for why this is separate)
+#   verify        — does the whole repository typecheck, lint, test and build?
+#   deploy        — publish the browser app, only if the two above are green
+#
+# `deploy` consumes the exact `apps/web/dist` that `verify` produced, rather than rebuilding it.
+# The bytes served at the public URL are therefore the bytes that passed the tests — a rebuild
+# could differ, and then a green Checks tab would be describing a different artifact from the one
+# people are actually using.
+
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+  # Lets the workflow be re-run from the Actions tab without pushing a commit.
+  workflow_dispatch:
 
-# Cancel superseded runs on the same ref; a stale result on an outdated commit helps nobody.
+# Cancel a superseded run: pushing twice quickly should not leave two deploys racing to publish.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
+env:
+  # Node 20 is the version `package.json` declares as the floor (engines.node >= 20.19).
+  NODE_VERSION: '20.19'
+  PNPM_VERSION: '9.15.4'
+
 jobs:
-  verify:
-    name: verify
+  # ---------------------------------------------------------------------------------------------
+  # The architecture boundaries.
+  #
+  # Split into its own job — and therefore its own line in the Checks tab — because it answers a
+  # different question from the rest of the suite. Every other test asks "does this code do what it
+  # should?"; these ask "is this still the shape of system we said it was?", which is the question
+  # that decays silently. A wrong number fails a test the day it is written; an import that crosses
+  # a layer boundary works perfectly and is only expensive years later.
+  #
+  # It checks, against `docs/architecture/dependency-layers.json`:
+  #   - no package imports one above it in the dependency graph
+  #   - no package imports something it has not declared
+  #   - no `node:` import inside a package that must also run in a browser Worker
+  #   - the UI contains no domain logic and no unit conversions (tests/architecture/ui-boundary)
+  #   - nothing at all depends on `@pandalog/ai`, so it can be deleted (tests/architecture/ai-removable)
+  #
+  # It runs first and takes a couple of seconds, so a boundary violation is reported before the
+  # longer job has finished.
+  # ---------------------------------------------------------------------------------------------
+  architecture:
+    name: Architecture boundaries
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
-          # Matches the engines field in package.json.
-          node-version: '20.11'
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      # Run the steps separately rather than via `pnpm verify` so a failure names the stage that
-      # failed in the job log without anyone having to read the output.
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: Package boundaries, UI boundary, and AI removability
+        run: pnpm vitest run tests/architecture --reporter=verbose
 
-      - name: Lint
-        run: pnpm lint
+  # ---------------------------------------------------------------------------------------------
+  # The full check: `pnpm verify` — typecheck, lint, test, build, in that order.
+  #
+  # This is the identical command a developer runs locally, deliberately: a CI script that assembles
+  # its own sequence of steps drifts from what anyone actually runs, and then "works on my machine"
+  # becomes true in both directions.
+  #
+  # What the test step covers, and why each part is here rather than being done by hand:
+  #
+  #   packages/parser-ardupilot  Decoding real fixture bytes, including the FMT byte layouts, which
+  #                              are pinned against values computed outside this codebase.
+  #   packages/query .. analysis Resampling, event detection and the analysis rules, plus golden
+  #                              fixtures so a change to any stage shows up as a reviewable diff.
+  #   packages/verification      That missing evidence is never recorded as a PASS (doc 03 §3).
+  #   packages/comparison        That an axis which could not be compared is never reported as
+  #                              "no difference" (ADR-0012).
+  #   packages/reporting         That two report runs over the same log are byte-identical apart
+  #                              from the generation timestamp, and that no number in a report was
+  #                              invented by the renderer (doc 04 §7).
+  #   packages/ai                That a model answer citing a measurement nothing produced is
+  #                              rejected before a caller can render it (ADR-0014).
+  #   packages/cli               **The exit codes**: 0 pass, 1 FAIL, 2 nothing conclusively
+  #                              verified, 64/65/70 for usage/input/internal faults. Asserted here
+  #                              so nobody has to run the CLI and read `echo $?` by hand.
+  #   apps/web                   That a corrupt, empty, truncated or wrong-type file produces a
+  #                              readable message in the page rather than a broken workspace.
+  #
+  # Coverage runs as a separate step with the 80% repo-wide threshold enforced, so a change that
+  # keeps the tests green by not testing the new code still fails.
+  # ---------------------------------------------------------------------------------------------
+  verify:
+    name: Verify (typecheck, lint, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Format check
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Formatting
         run: pnpm format:check
 
-      - name: Test with coverage
+      - name: pnpm verify — typecheck, lint, test, build
+        run: pnpm verify
+
+      - name: Coverage (80% threshold, enforced)
         run: pnpm test:coverage
 
-      - name: Build
-        run: pnpm build
+      # The built browser app, handed to the deploy job so the published bytes are the tested ones.
+      - name: Package the browser app for GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
 
-      # `src/bin.ts` is the one file the unit tests cannot reach: it exists to wire argv, the
-      # filesystem, the streams and the exit call to `runCli`. This smoke test runs the built
-      # binary as a real process and asserts the exit codes a user's CI pipeline depends on —
-      # 0 for a clean flight, 1 for a failing requirement, 65 for an unreadable log.
-      - name: CLI smoke test
-        run: |
-          set -u
-          check() {
-            node packages/cli/dist/bin.js "${@:2}" >/dev/null 2>&1
-            actual=$?
-            if [ "$actual" -ne "$1" ]; then
-              echo "expected exit $1 from 'pandalog ${*:2}', got $actual" >&2
-              exit 1
-            fi
-          }
-          check 0  verify fixtures/ardupilot/nominal.bin --quiet
-          check 1  verify fixtures/ardupilot/mode-change-error.bin --quiet
-          check 2  verify fixtures/ardupilot/gps-glitch.bin --quiet
-          check 64 badcommand
-          check 65 verify does-not-exist.bin
-          node packages/cli/dist/bin.js verify fixtures/ardupilot/nominal.bin --quiet | node -e \
-            'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>JSON.parse(s))'
+  # ---------------------------------------------------------------------------------------------
+  # Publish the browser app to GitHub Pages.
+  #
+  # Only on a push to main, and only after both jobs above are green — a red build is never
+  # published, so the public URL always reflects a commit that passed.
+  #
+  # GitHub Pages serves static files and nothing else: it cannot run server-side code even if
+  # somebody tried to add some. That is the reason it was chosen over hosts that also offer
+  # serverless functions — see README, "Why GitHub Pages". The app parses logs entirely in the
+  # browser tab, so there is nothing for a server to do.
+  # ---------------------------------------------------------------------------------------------
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [architecture, verify]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write # publish
+      id-token: write # prove to Pages that this deployment came from this workflow
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy the artifact built by the verify job
+        id: deployment
+        uses: actions/deploy-pages@v4

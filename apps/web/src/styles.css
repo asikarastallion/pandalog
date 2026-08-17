@@ -84,3 +84,47 @@ button {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/*
+ * The fatal-error panel, built by `main.ts` when a defect escapes every other handler.
+ *
+ * Styled here rather than inline so it inherits the app's palette, and kept deliberately plain: it
+ * renders at a moment when nothing else on the page can be assumed to have worked.
+ */
+.fatal {
+  max-width: 60rem;
+  margin: 3rem auto;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--fail);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.fatal h1 {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  color: var(--fail);
+}
+
+.fatal p {
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--fg-dim);
+}
+
+.fatal pre {
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 20rem;
+  overflow: auto;
+}

@@ -63,10 +63,19 @@ function onPick(event: Event): void {
       </label>
     </template>
 
-    <p v-if="state.status === 'failed'" class="failure" role="alert">
-      <strong>{{ state.fileName }} could not be analysed.</strong>
-      {{ state.message }}
-    </p>
+    <!--
+      Two sentences, deliberately. The first is what the domain package said, verbatim, so a user
+      reporting a problem quotes the tool rather than a paraphrase of it. The second is what they
+      can do about it. `role="alert"` so it is announced rather than merely appearing.
+    -->
+    <div v-if="state.status === 'failed'" class="failure" role="alert">
+      <p class="failure-headline">
+        <strong>{{ state.fileName }} could not be analysed.</strong>
+      </p>
+      <p class="failure-detail">{{ state.message }}</p>
+      <p class="failure-guidance">{{ state.guidance }}</p>
+      <p class="failure-retry">The workspace is unchanged — drop another log to try again.</p>
+    </div>
   </div>
 </template>
 
@@ -129,13 +138,36 @@ function onPick(event: Event): void {
 
 .failure {
   margin: 0.9rem 0 0;
-  padding: 0.5rem 0.6rem;
+  padding: 0.6rem 0.7rem;
   border: 1px solid var(--fail);
   border-radius: 3px;
   color: var(--fail);
   font-size: 0.78rem;
   line-height: 1.5;
   text-align: left;
+}
+
+.failure p {
+  margin: 0;
+}
+
+.failure-detail {
+  /* The domain's own words, in the monospace face used everywhere a machine wrote the text. */
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  margin-top: 0.35rem !important;
+  opacity: 0.9;
+}
+
+.failure-guidance {
+  margin-top: 0.5rem !important;
+  color: var(--fg);
+}
+
+.failure-retry {
+  margin-top: 0.5rem !important;
+  color: var(--fg-dim);
+  font-size: 0.72rem;
 }
 
 code {

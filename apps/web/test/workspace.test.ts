@@ -107,14 +107,31 @@ describe('the state model (doc 01 §4)', () => {
   it('keeps a failure message and shows no stale result', () => {
     const workspace = createWorkspace();
     workspace.setResult('degraded-flight.bin', result);
-    workspace.failLoad('bad.bin', 'no adapter recognised this file');
+    workspace.failLoad(
+      'bad.bin',
+      Object.assign(new Error('no adapter recognised this file'), { code: 'NO_ADAPTER' }),
+    );
 
     expect(workspace.load.value).toEqual({
       status: 'failed',
       fileName: 'bad.bin',
       message: 'no adapter recognised this file',
+      guidance: expect.stringContaining('.BIN') as string,
     });
+    // A failed load must not leave the previous flight on screen under the new file's name.
     expect(workspace.result.value).toBeNull();
+  });
+
+  it('recovers to a working workspace after a failure', () => {
+    // The state a browser-only user is most likely to reach: drop the wrong file, then the right
+    // one. A failure that left the store wedged would need a page reload to escape.
+    const workspace = createWorkspace();
+    workspace.failLoad('bad.bin', new Error('unreadable'));
+    workspace.setResult('degraded-flight.bin', result);
+
+    expect(workspace.load.value).toEqual({ status: 'ready', fileName: 'degraded-flight.bin' });
+    expect(workspace.result.value).not.toBeNull();
+    expect(workspace.findings.value.length).toBeGreaterThan(0);
   });
 });
 

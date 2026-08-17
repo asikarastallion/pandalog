@@ -18,6 +18,7 @@ import LogDropZone from './components/LogDropZone.vue';
 import PlaybackControls from './components/PlaybackControls.vue';
 import VerificationPanel from './components/VerificationPanel.vue';
 import { createDefaultPipelineClient, type PipelineClient } from './workers/client.js';
+import { LogTooLargeError, MAX_LOG_BYTES, tooLargeMessage } from './workspace/failure.js';
 import { createWorkspace } from './workspace/state.js';
 
 const workspace = createWorkspace();
@@ -32,11 +33,20 @@ function pipeline(): PipelineClient {
 
 async function open(file: File): Promise<void> {
   workspace.beginLoad(file.name);
+
+  // Checked before the file is read, not after (doc 04 §8). `File.arrayBuffer()` on a
+  // multi-gigabyte file can end the tab before any handler runs, and a tab that dies is the one
+  // failure a user gets no message about at all.
+  if (file.size > MAX_LOG_BYTES) {
+    workspace.failLoad(file.name, new LogTooLargeError(tooLargeMessage(file.name, file.size)));
+    return;
+  }
+
   try {
     const result = await pipeline().analyse(file.name, await file.arrayBuffer());
     workspace.setResult(file.name, result);
   } catch (error) {
-    workspace.failLoad(file.name, error instanceof Error ? error.message : String(error));
+    workspace.failLoad(file.name, error);
   }
 }
 

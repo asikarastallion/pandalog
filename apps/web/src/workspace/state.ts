@@ -22,6 +22,7 @@ import type { PipelineResult } from '@pandalog/pipeline';
 import { timeSpanOf, type TimeWindow } from '@pandalog/query';
 
 import { findingsByTime, openInvestigation, type Investigation } from './investigation.js';
+import { describeFailure } from './failure.js';
 import { playbackStateAt, type PlaybackState } from './playback.js';
 import { buildGroundTrack, type GroundTrack } from './track.js';
 
@@ -32,7 +33,14 @@ export type LoadState =
   | { readonly status: 'empty' }
   | { readonly status: 'loading'; readonly fileName: string }
   | { readonly status: 'ready'; readonly fileName: string }
-  | { readonly status: 'failed'; readonly fileName: string; readonly message: string };
+  | {
+      readonly status: 'failed';
+      readonly fileName: string;
+      /** What the domain package said, verbatim. */
+      readonly message: string;
+      /** What the person who dropped the file can do about it (see `failure.ts`). */
+      readonly guidance: string;
+    };
 
 export interface Workspace {
   readonly load: Readonly<Ref<LoadState>>;
@@ -55,7 +63,8 @@ export interface Workspace {
 
   beginLoad(fileName: string): void;
   setResult(fileName: string, result: PipelineResult): void;
-  failLoad(fileName: string, message: string): void;
+  /** Takes the thrown value, not a string: the error's `code` is what selects the guidance. */
+  failLoad(fileName: string, thrown: unknown): void;
   selectFinding(findingId: string | null): void;
   toggleExtraSignal(signalId: string): void;
   seek(tSeconds: number): void;
@@ -166,8 +175,9 @@ export function createWorkspace(): Workspace {
       playbackTime.value = clampToFlight(Number.NEGATIVE_INFINITY);
     },
 
-    failLoad(fileName: string, message: string): void {
-      load.value = { status: 'failed', fileName, message };
+    failLoad(fileName: string, thrown: unknown): void {
+      const { message, guidance } = describeFailure(thrown);
+      load.value = { status: 'failed', fileName, message, guidance };
       result.value = null;
       selectedFindingId.value = null;
     },
