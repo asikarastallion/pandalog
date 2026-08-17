@@ -20,6 +20,12 @@
     "paths": {
       "@pandalog/schema": ["../../packages/schema/src/index.ts"],
       "@pandalog/core-domain": ["../../packages/core-domain/src/index.ts"],
+      // Not imported by the app directly — `@pandalog/pipeline` pulls them in. Mapped anyway,
+      // because without them these two resolve through node_modules to `dist/*.d.ts`, which only
+      // exists after a build. That made `pnpm typecheck` pass on a machine that had built before
+      // and fail on a clean checkout, which is exactly the bug CI caught on its first run.
+      "@pandalog/ingestion": ["../../packages/ingestion/src/index.ts"],
+      "@pandalog/parser-ardupilot": ["../../packages/parser-ardupilot/src/index.ts"],
       "@pandalog/query": ["../../packages/query/src/index.ts"],
       "@pandalog/events": ["../../packages/events/src/index.ts"],
       "@pandalog/analysis": ["../../packages/analysis/src/index.ts"],

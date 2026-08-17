@@ -16,6 +16,10 @@ export default defineConfig({
     alias: {
       '@pandalog/schema': pkgSrc('schema'),
       '@pandalog/core-domain': pkgSrc('core-domain'),
+      // Reached through @pandalog/pipeline rather than imported here, but still resolved from
+      // source: otherwise the bundle would silently be built from whatever dist/ happened to exist.
+      '@pandalog/ingestion': pkgSrc('ingestion'),
+      '@pandalog/parser-ardupilot': pkgSrc('parser-ardupilot'),
       '@pandalog/query': pkgSrc('query'),
       '@pandalog/events': pkgSrc('events'),
       '@pandalog/analysis': pkgSrc('analysis'),
