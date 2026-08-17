@@ -100,6 +100,11 @@ CLI's own stderr summary says so rather than leaving it to be inferred.
 Layer number orders dependencies, not build order: `cli` and `web` arrive in phases G and H but
 sit at the top because they consume everything beneath them (ADR-0008).
 
+**This table is keyed by package, not by phase.** A phase that extends an application rather than
+adding a package — Phase I, which built the map, playback and 3D views into `apps/web` — has no row
+of its own. Absence here does not mean a phase was skipped; `05_IMPLEMENTATION_ROADMAP.md` is the
+record of what each phase delivered (ADR-0015).
+
 Every package's permitted dependencies are declared in
 [`docs/architecture/dependency-layers.json`](docs/architecture/dependency-layers.json) and
 checked by a test, not left to convention (see [Enforcement](#enforcement)).

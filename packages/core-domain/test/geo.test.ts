@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { localPlaneScale, toLocalPlane } from '@pandalog/core-domain';
+import { localPlaneScale, toLocalPlane, fromLocalPlane } from '@pandalog/core-domain';
 
 const deg = (value: number): number => (value * Math.PI) / 180;
 
@@ -113,5 +113,55 @@ describe('localPlaneScale', () => {
 
     expect(offset.northMeters).toBeCloseTo(scale.metresPerRadianNorth * 0.001, 6);
     expect(offset.eastMeters).toBeCloseTo(scale.metresPerRadianEast * 0.001, 6);
+  });
+});
+
+describe('fromLocalPlane', () => {
+  const reference = { latitudeRad: (39.5 * Math.PI) / 180, longitudeRad: (32.8 * Math.PI) / 180 };
+
+  it('is the exact inverse of toLocalPlane', () => {
+    // The property that matters: a map drawing a track from recovered coordinates must put it back
+    // where the log said it was, not near it.
+    const offsets: readonly (readonly [number, number])[] = [
+      [0, 0],
+      [0.001, 0.002],
+      [-0.0005, 0.0015],
+      [0.01, -0.01],
+    ];
+
+    for (const [dLat, dLon] of offsets) {
+      const latitudeRad = reference.latitudeRad + (dLat * Math.PI) / 180;
+      const longitudeRad = reference.longitudeRad + (dLon * Math.PI) / 180;
+
+      const offset = toLocalPlane(latitudeRad, longitudeRad, reference);
+      const recovered = fromLocalPlane(offset, reference);
+
+      expect(recovered.latitudeRad).toBeCloseTo(latitudeRad, 12);
+      expect(recovered.longitudeRad).toBeCloseTo(longitudeRad, 12);
+    }
+  });
+
+  it('returns the reference itself for a zero offset', () => {
+    const recovered = fromLocalPlane({ eastMeters: 0, northMeters: 0 }, reference);
+
+    expect(recovered.latitudeRad).toBeCloseTo(reference.latitudeRad, 15);
+    expect(recovered.longitudeRad).toBeCloseTo(reference.longitudeRad, 15);
+  });
+
+  it('moves north for a positive north offset and east for a positive east offset', () => {
+    const north = fromLocalPlane({ eastMeters: 0, northMeters: 1000 }, reference);
+    const east = fromLocalPlane({ eastMeters: 1000, northMeters: 0 }, reference);
+
+    expect(north.latitudeRad).toBeGreaterThan(reference.latitudeRad);
+    expect(north.longitudeRad).toBeCloseTo(reference.longitudeRad, 15);
+    expect(east.longitudeRad).toBeGreaterThan(reference.longitudeRad);
+    expect(east.latitudeRad).toBeCloseTo(reference.latitudeRad, 15);
+  });
+
+  it('propagates a non-finite offset rather than returning the reference', () => {
+    // Returning the reference would put an unrecorded position at the start of the flight.
+    const recovered = fromLocalPlane({ eastMeters: Number.NaN, northMeters: 0 }, reference);
+
+    expect(Number.isNaN(recovered.longitudeRad)).toBe(true);
   });
 });

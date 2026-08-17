@@ -25,7 +25,7 @@ export {
 export type { KnownSourceUnit } from './units.js';
 
 export { DISPLAY_UNIT_OF, DISPLAY_UNITS, toDisplayUnit } from './display.js';
-export { localPlaneScale, toLocalPlane } from './geo.js';
+export { fromLocalPlane, localPlaneScale, toLocalPlane } from './geo.js';
 export type { GeoReference, LocalPlaneOffset, LocalPlaneScale } from './geo.js';
 export type { DisplayValue } from './display.js';
 

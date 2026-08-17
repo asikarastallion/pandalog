@@ -152,6 +152,12 @@ typecheck/lint, check for dead code and duplicated logic, check whether docs nee
 report what changed and what was validated, and state known limitations honestly — do not
 report success without the evidence (test output, typecheck output) to back it.
 
+**A limitation stated only in conversation is not recorded** (ADR-0015). A phase may be marked
+complete in `05_IMPLEMENTATION_ROADMAP.md` with a deliverable outstanding, but only if that entry
+itself names what is outstanding. A caveat that lives in a chat summary or a commit message has not
+been written down: neither is where anyone looks to find out what the system does, and the roadmap
+saying "complete" while the gap lives elsewhere is how a document starts overstating the product.
+
 ## 13. Self-review before declaring a milestone complete
 
 ```text

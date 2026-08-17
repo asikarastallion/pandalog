@@ -9,7 +9,12 @@
  * Joining across it draws a flight path that was never flown, and the length of that invented leg
  * scales with the length of the outage, so the worse the data the more confident the picture looks.
  */
-import { localPlaneScale, toLocalPlane, type GeoReference } from '@pandalog/core-domain';
+import {
+  fromLocalPlane,
+  localPlaneScale,
+  toLocalPlane,
+  type GeoReference,
+} from '@pandalog/core-domain';
 import { alignSignals } from '@pandalog/query';
 import { isValueBearing, type CanonicalFlightDataset } from '@pandalog/schema';
 
@@ -216,4 +221,56 @@ export function trackGeoBounds(track: GroundTrack): {
     westRad: track.reference.longitudeRad + track.bounds.minEast / scale.metresPerRadianEast,
     eastRad: track.reference.longitudeRad + track.bounds.maxEast / scale.metresPerRadianEast,
   };
+}
+
+/** One geographic coordinate in degrees, which is what every mapping API takes. */
+export interface GeoPointDegrees {
+  readonly latitude: number;
+  readonly longitude: number;
+}
+
+const DEGREES_PER_RADIAN = 180 / Math.PI;
+
+/**
+ * The track as geographic coordinates, segment by segment.
+ *
+ * For drawing on a real basemap. The projection is inverted through `core-domain`'s own
+ * `fromLocalPlane` rather than with a metres-per-degree constant, so the drawn line lands exactly
+ * where `toLocalPlane` put it (doc 04 §1 rule 7) — and the segmentation is preserved, so a break
+ * where the fix was lost stays a break rather than becoming a straight leg across the outage.
+ *
+ * Degrees rather than radians because that is the unit mapping libraries accept; the conversion
+ * lives here, in a tested module, rather than inside a component.
+ */
+export function trackGeoSegments(track: GroundTrack): GeoPointDegrees[][] {
+  return track.segments.map((segment) =>
+    segment.map((point) => {
+      const geo = fromLocalPlane(
+        { eastMeters: point.eastMeters, northMeters: point.northMeters },
+        track.reference,
+      );
+      return {
+        latitude: geo.latitudeRad * DEGREES_PER_RADIAN,
+        longitude: geo.longitudeRad * DEGREES_PER_RADIAN,
+      };
+    }),
+  );
+}
+
+/** The track's bounds in degrees, for fitting a map viewport. */
+export function trackGeoBoundsDegrees(track: GroundTrack): {
+  readonly south: number;
+  readonly west: number;
+  readonly north: number;
+  readonly east: number;
+} | null {
+  const bounds = trackGeoBounds(track);
+  return bounds === null
+    ? null
+    : {
+        south: bounds.southRad * DEGREES_PER_RADIAN,
+        west: bounds.westRad * DEGREES_PER_RADIAN,
+        north: bounds.northRad * DEGREES_PER_RADIAN,
+        east: bounds.eastRad * DEGREES_PER_RADIAN,
+      };
 }

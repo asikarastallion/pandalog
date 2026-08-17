@@ -157,7 +157,68 @@ Each package is a load-bearing boundary, not an organizational convenience:
   canonical shapes. View-specific state (selection, zoom, active tab) is UI state; flight data,
   findings, and verification results are not.
 
-## 6. Enforcement
+### 5.1 Information architecture (contract, not styling)
+
+The workspace is **navigated, not stacked**. An earlier revision rendered flight metadata, playback,
+ground track, timeline, findings and verification onto one scrolling page; every view competed for
+the same screen and none of them could grow. The structure below is a contract so that it does not
+silently collapse back into one page the next time a view is added.
+
+**Two levels, and only two.**
+
+```text
+Landing  ──▶  Workspace(log)  ──▶  one of seven views
+```
+
+**Landing** is what the application opens on. It lists previously analysed logs from IndexedDB —
+file name, when it was analysed, flight duration, the PASS/FAIL/INCONCLUSIVE/NOT_APPLICABLE tally,
+and the source SHA-256 — and offers "open a log" at all times. Selecting an entry opens its
+workspace. Persistence is local to the browser; it is not a sync feature and there is no server to
+sync to (§2).
+
+**Workspace** has a persistent navigation rail and exactly one active view:
+
+| View          | Answers                                                                  |
+| ------------- | ------------------------------------------------------------------------ |
+| Summary       | What is this flight, and what did the analysis conclude overall?          |
+| Plot          | What did these signals do, against each other, over time?                 |
+| Map           | Where did it fly? (two modes — §5.2)                                      |
+| 3D Playback   | What was it doing at this instant, along the path it actually flew?       |
+| Investigation | What was found, what proves it, and what were the samples behind it?      |
+| Verification  | Did it meet each requirement, and on what evidence?                       |
+| Report        | The reproducible, provenance-stamped document (`@pandalog/reporting`).    |
+
+Rules that make this a contract rather than a layout:
+
+1. **A view answers one question.** A new capability becomes a view, or extends the view whose
+   question it belongs to. It does not get appended to whichever page has room.
+2. **Investigation and Verification stay separate views.** They are the product's distinguishing
+   claim, and each needs a full screen: a finding resolved to its evidence and signals (doc 03 §5),
+   and four outcomes shown as four outcomes rather than a tick and a cross.
+3. **One clock, one selection.** Playback time, the selected finding and the selected signals live
+   in the workspace store and are shared by every view. Switching view never resets them; a finding
+   selected in Investigation is the same instant the 3D view is showing.
+4. **Views hold no domain logic** (§5 above, doc 04 §1 rules 1-2). They arrange components and read
+   the store. Geometry needed only for drawing — projections, scales, glyphs — lives in
+   `apps/web/src/workspace/*.ts` as pure functions with tests, never inside a component.
+5. **Which view is open is UI state.** It is not persisted into the canonical model and never
+   changes what the analysis concluded.
+
+### 5.2 Network access from the browser (map tiles)
+
+Doc §2 says the log never leaves the machine, and that remains true by default. The map therefore has
+two modes, and the default is the one that talks to nobody:
+
+- **Local (default).** The ground track is drawn in projected metres with a scale bar and its
+  geographic bounds labelled. No request leaves the page. This is ADR-0011's original behaviour and
+  it is unchanged.
+- **Basemap (opt-in).** Raster tiles from a public OpenStreetMap tile server, behind an explicit,
+  informed consent step that states what is sent and to whom. Enabling it is a per-browser choice
+  that is remembered; it is never on by default, never inferred, and revocable.
+
+Consent is required because a tile request discloses **where the aircraft flew** to a third party —
+the tile coordinates are the flight's location. That is a different disclosure from fetching a
+stylesheet, and the user is the only one who can weigh it. See ADR-0011 (revised).
 
 `tests/architecture/dependency-direction.test.ts`:
 

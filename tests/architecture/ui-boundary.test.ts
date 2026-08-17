@@ -20,7 +20,15 @@ import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from './manifest.js';
 import { extractScriptBlocks, extractSpecifiers, extractValueSpecifiers } from './scan-imports.js';
 
-const COMPONENTS_DIR = path.join(REPO_ROOT, 'apps', 'web', 'src', 'components');
+/**
+ * Every `.vue` file in the app, not just `components/`.
+ *
+ * Scanning only `components/` was correct while that was where all the UI lived. The workspace
+ * restructure (doc 01 §5.1) moved most of it into `views/`, which would have left the majority of
+ * the UI outside the boundary this file exists to enforce — a hole opened by a directory rename,
+ * which is exactly how a checked rule quietly stops being checked.
+ */
+const UI_DIR = path.join(REPO_ROOT, 'apps', 'web', 'src');
 
 interface Component {
   readonly name: string;
@@ -35,7 +43,7 @@ interface Component {
 function loadComponents(): Component[] {
   let entries: string[];
   try {
-    entries = readdirSync(COMPONENTS_DIR, { recursive: true, encoding: 'utf8' });
+    entries = readdirSync(UI_DIR, { recursive: true, encoding: 'utf8' });
   } catch {
     return [];
   }
@@ -43,7 +51,7 @@ function loadComponents(): Component[] {
   return entries
     .filter((entry) => entry.endsWith('.vue'))
     .map((entry) => {
-      const absolute = path.join(COMPONENTS_DIR, entry);
+      const absolute = path.join(UI_DIR, entry);
       const source = readFileSync(absolute, 'utf8');
       const script = extractScriptBlocks(source);
       return {

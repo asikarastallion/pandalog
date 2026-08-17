@@ -1,6 +1,6 @@
-# ADR-0011 — Ground track is projected to a local tangent plane; no basemap is fetched
+# ADR-0011 — Ground track is projected to a local tangent plane; the basemap is opt-in
 
-- **Status:** Accepted
+- **Status:** Accepted; decision 2 revised 2026-08-17 (no basemap → opt-in basemap)
 - **Date:** 2026-08-17
 - **Affects:** `05_IMPLEMENTATION_ROADMAP.md` Phase I, `@pandalog/core-domain` (new `geo.ts`),
   `apps/web` map view
@@ -40,8 +40,17 @@ It lives in `core-domain` rather than in `apps/web` for the same reason unit con
 (doc 04 §1 rule 7): it is a conversion with an earth model and physical constants behind it, and a
 component is not where `6378137.0` belongs.
 
-**2. The map draws no basemap.** The ground track is rendered in projected metres with a scale bar
-and its geographic bounds labelled. No tiles are fetched, by default or otherwise.
+**2. The map has two modes, and the default fetches nothing.**
+
+- **Local (default).** The ground track rendered in projected metres with a scale bar and its
+  geographic bounds labelled. No request leaves the page — not a tile, not a stylesheet, and not the
+  mapping library, which is behind a dynamic import so that declining downloads nothing.
+- **Basemap (opt-in).** Raster tiles from OpenStreetMap, behind an explicit consent step stating
+  what is sent, what it discloses, what is _not_ sent, and that the choice is reversible. Never on
+  by default, never inferred, revocable at any time, remembered per browser.
+
+_Revised 2026-08-17._ The original decision was "no basemap, ever". That was right about the
+default and wrong to make it the only option — see "On the basemap", below.
 
 ## Reason
 
@@ -57,23 +66,36 @@ between datums would be inventing precision the source does not have.
 
 **On the basemap.** Three options were weighed:
 
-- _Fetch tiles by default._ Rejected on doc 01 §2 and on the privacy claim the product makes.
+- _Fetch tiles by default._ Rejected, and still rejected. It would make a third-party disclosure on
+  the user's behalf, in an application whose front page promises the log never leaves the machine.
 - _Bundle offline tiles._ A world basemap at useful zoom is gigabytes; a regional one presumes where
   the user flies.
-- _Draw no basemap._ The track, its scale, and its coordinates are what a flight-test engineer
-  reads off a ground track — whether it is over a rendered field or a blank grid does not change
-  where the aircraft was. What is lost is context an operator usually already has.
+- _Draw no basemap, ever._ Originally chosen. Honest and cheap, and **too strong**: it treated a
+  disclosure the user might reasonably want to make as one they must never be offered. "What is
+  lost is context an operator usually already has" was the weakest sentence in this ADR — an
+  operator investigating an unfamiliar site, or reviewing somebody else's sortie, does not have it.
+- _Offer it, off by default, behind informed consent._ **Now chosen.** The privacy property that
+  mattered was never "no tiles"; it was "nothing is disclosed that the user did not choose to
+  disclose". A default of off with a clear, revocable opt-in delivers that and stops deciding for
+  people who can decide for themselves.
 
-The third is honest about what it does and does not show, and costs nothing at rest.
+The consent is not a formality, and its wording is tested. What is disclosed is **where the aircraft
+flew** — tile coordinates are the flight's location — which is a materially different disclosure
+from fetching a font, and the reason a checkbox alone would not be enough.
 
 ## Consequences
 
 - The map view answers "what path did it fly, how big was it, and where" — not "what was underneath
   it". That limitation is stated in the UI rather than left to be discovered.
-- Adding an opt-in tile provider later is a product decision needing its own ADR, and would follow
-  the shape doc 01 §2 already sets for `packages/ai`: off by default, configured by the user,
-  talking directly from the client to the provider they chose, with the privacy consequence stated
-  at the point of enabling it.
+- The opt-in tile provider anticipated here is now implemented, in the shape this ADR predicted and
+  doc 01 §2 sets for `packages/ai`: off by default, chosen by the user, talking directly from the
+  client to the provider, with the privacy consequence stated at the point of enabling it.
+- OpenStreetMap was chosen as the provider because its data is openly licensed, its attribution
+  requirement is satisfiable in-page, and it needs **no API key** — doc 04 §8 forbids shipping one
+  in the bundle, which rules out most commercial providers outright.
+- Leaflet is loaded by dynamic import, so it is a separate chunk (~148 KB) that a user who declines
+  never downloads. The privacy default and the bundle-size default are the same default.
+- Doc 01 §5.2 now records the two-mode rule, so it is a contract rather than a component detail.
 - `toLocalPlane` is approximate by construction. Its tolerance is documented on the function and
   tested at range, so a caller can see where it stops being appropriate rather than discovering it.
 - If a spatial type ever does belong in the canonical model — a fused position estimate, say — that

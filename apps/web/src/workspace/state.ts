@@ -24,7 +24,9 @@ import { timeSpanOf, type TimeWindow } from '@pandalog/query';
 import { findingsByTime, openInvestigation, type Investigation } from './investigation.js';
 import { describeFailure } from './failure.js';
 import { playbackStateAt, type PlaybackState } from './playback.js';
+import { DEFAULT_VIEW, type ViewId } from './navigation.js';
 import { buildGroundTrack, type GroundTrack } from './track.js';
+import { buildTrajectory, type Trajectory } from './trajectory.js';
 
 /** How much flight either side of a finding's evidence to show for context. */
 const CONTEXT_PADDING_SECONDS = 1;
@@ -60,11 +62,22 @@ export interface Workspace {
   /** The vehicle's state at `playbackTime`, derived rather than stored. */
   readonly playback: ComputedRef<PlaybackState | null>;
   readonly groundTrack: ComputedRef<GroundTrack | null>;
+  /** The flown path in 3D, broken wherever the ground track is (doc 01 §5.1). */
+  readonly trajectory: ComputedRef<Trajectory | null>;
+
+  /**
+   * Which view is open. UI state (doc 01 §5.1 rule 5): it is never persisted into the canonical
+   * model and switching it never changes what the analysis concluded.
+   */
+  readonly activeView: Readonly<Ref<ViewId>>;
 
   beginLoad(fileName: string): void;
   setResult(fileName: string, result: PipelineResult): void;
   /** Takes the thrown value, not a string: the error's `code` is what selects the guidance. */
   failLoad(fileName: string, thrown: unknown): void;
+  showView(view: ViewId): void;
+  /** Open a finding *and* switch to the view that explains it — doc 01 §5.1 rule 3. */
+  investigate(findingId: string): void;
   selectFinding(findingId: string | null): void;
   toggleExtraSignal(signalId: string): void;
   seek(tSeconds: number): void;
@@ -82,6 +95,7 @@ export function createWorkspace(): Workspace {
   const result = shallowRef<PipelineResult | null>(null);
   const selectedFindingId = shallowRef<string | null>(null);
   const extraSignalIds = shallowRef<readonly string[]>([]);
+  const activeView = shallowRef<ViewId>(DEFAULT_VIEW);
 
   const findings = computed(() => findingsByTime(result.value?.findings ?? []));
 
@@ -132,6 +146,15 @@ export function createWorkspace(): Workspace {
     return current === null ? null : buildGroundTrack(current.dataset);
   });
 
+  // Built from the ground track rather than from the dataset, so the 3D path is guaranteed to break
+  // wherever the 2D one does. Two views of one flight disagreeing about where the aircraft had no
+  // position would be worse than having only one of them.
+  const trajectory = computed<Trajectory | null>(() => {
+    const current = result.value;
+    const track = groundTrack.value;
+    return current === null || track === null ? null : buildTrajectory(current.dataset, track);
+  });
+
   const clampToFlight = (tSeconds: number): number => {
     const span = flightWindow.value;
     if (span === null) {
@@ -153,9 +176,12 @@ export function createWorkspace(): Workspace {
     isPlaying: readonly(isPlaying),
     playback,
     groundTrack,
+    trajectory,
+    activeView: readonly(activeView),
 
     beginLoad(fileName: string): void {
       load.value = { status: 'loading', fileName };
+      activeView.value = DEFAULT_VIEW;
       result.value = null;
       selectedFindingId.value = null;
       extraSignalIds.value = [];
@@ -180,6 +206,17 @@ export function createWorkspace(): Workspace {
       load.value = { status: 'failed', fileName, message, guidance };
       result.value = null;
       selectedFindingId.value = null;
+    },
+
+    showView(view: ViewId): void {
+      activeView.value = view;
+    },
+
+    investigate(findingId: string): void {
+      // Selection and view move together: a finding chosen anywhere lands the operator on the
+      // screen that explains it, with the clock and every other view unchanged (doc 01 §5.1 rule 3).
+      selectedFindingId.value = findingId;
+      activeView.value = 'investigation';
     },
 
     selectFinding(findingId: string | null): void {

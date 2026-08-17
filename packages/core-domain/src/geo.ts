@@ -106,3 +106,31 @@ export function toLocalPlane(
       scale.metresPerRadianEast * shortestAngleDifference(longitudeRad, reference.longitudeRad),
   };
 }
+
+/**
+ * Recover a coordinate from a tangent-plane offset — the exact inverse of `toLocalPlane`.
+ *
+ * Needed because the offsets are what the ground track carries, and drawing that track on a
+ * geographic map means converting back. Doing it here rather than in the app keeps a single earth
+ * model: an inverse written elsewhere with a "metres per degree" constant would disagree with the
+ * forward projection by metres at the edges of a flight, and the disagreement would show up as a
+ * track that does not sit where the log said it did.
+ *
+ * The same scale is used as on the way out — evaluated at the reference latitude, not at the
+ * recovered one — because that is what makes it an exact inverse rather than an approximate one.
+ *
+ * A non-finite offset yields a non-finite coordinate rather than the reference point, for the
+ * reason `toLocalPlane` does the same in the other direction (doc 04 §1 rule 6).
+ */
+export function fromLocalPlane(offset: LocalPlaneOffset, reference: GeoReference): GeoReference {
+  if (!Number.isFinite(offset.eastMeters) || !Number.isFinite(offset.northMeters)) {
+    return { latitudeRad: NaN, longitudeRad: NaN };
+  }
+
+  const scale = localPlaneScale(reference.latitudeRad);
+
+  return {
+    latitudeRad: reference.latitudeRad + offset.northMeters / scale.metresPerRadianNorth,
+    longitudeRad: reference.longitudeRad + offset.eastMeters / scale.metresPerRadianEast,
+  };
+}

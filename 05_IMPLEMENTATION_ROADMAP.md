@@ -266,7 +266,20 @@ drag-and-drop or the File System Access API and never leave the client.
 
 ---
 
-## Phase I — Map / 3D / Playback ✅ complete
+## Phase I — Map / 3D / Playback ✅ complete (one deliverable was partial; closed 2026-08-17)
+
+**Correction, recorded in ADR-0015.** This entry originally read "✅ complete" without qualification.
+It should not have. Of the stated deliverable "3D attitude/**trajectory** playback", the attitude
+half shipped — a wireframe rotated by the logged roll/pitch/yaw and orthographically projected to
+2D SVG from a fixed camera — and **the trajectory half did not**: nothing in the repository computed
+a flown path in three dimensions, and the flown path existed only as the 2D ground track. That
+shortfall was stated in the session summary at the time and never written here, which is the part
+that mattered: the roadmap is where someone who was not present finds out where the project stands,
+and it was the one place the limitation was missing.
+
+The gap is now closed. A perspective 3D playback view — flown trajectory, camera, airframe oriented
+along it — is delivered as part of the workspace restructure (doc 01 §5.1). A phase may now be
+marked complete with a deliverable outstanding **only if this entry names what is outstanding**.
 
 Verified 2026-08-17: `pnpm verify` green, 858 tests, and confirmed in a real browser — scrubbing
 into the GNSS outage removes the position rather than holding the last fix.
