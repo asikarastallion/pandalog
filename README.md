@@ -58,7 +58,7 @@ CLI's own stderr summary says so rather than leaving it to be inferred.
 | [`@pandalog/analysis`](packages/analysis)                 | 6     | Deterministic rules → evidence-backed findings.                                | E ✅  |
 | [`@pandalog/verification`](packages/verification)         | 7     | Requirement definitions and evaluation.                                        | F ✅  |
 | [`@pandalog/pipeline`](packages/pipeline)                 | 8     | Ingest → detect → analyse → verify, composed once for every app.               | H ✅  |
-| `@pandalog/comparison`                                    | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
+| [`@pandalog/comparison`](packages/comparison)             | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J ✅  |
 | `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
 | `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
 | [`@pandalog/cli`](packages/cli)                           | 11    | Headless ingest → analyze → verify → report.                                   | G ✅  |
@@ -168,6 +168,10 @@ Not style preferences — this is why the packages are split the way they are.
   was produced. Unknown synchronisation uncertainty is recorded as `null`, never as `0`.
 - **Raw data is immutable.** Derived values are separate artifacts.
 - **Fail loudly.** A malformed log raises a structured error; it is never partially salvaged.
+- **"Could not check" is not "nothing wrong".** A comparison of two flights answers `SAME`,
+  `DIFFERENT` or `INCOMPARABLE`, and an axis that could not be examined is never reported as
+  showing no difference — the same refusal verification makes about evidence, one stage further
+  along (ADR-0012).
 - **Analysis never depends on the UI.** Every engine must be runnable from a test or a CLI.
 - **Evidence is mandatory.** A finding without at least one evidence reference cannot be
   constructed; missing evidence in verification is `INCONCLUSIVE`, never `PASS`.

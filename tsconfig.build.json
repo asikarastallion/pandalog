@@ -11,6 +11,7 @@
     { "path": "./packages/analysis" },
     { "path": "./packages/verification" },
     { "path": "./packages/pipeline" },
+    { "path": "./packages/comparison" },
     { "path": "./packages/cli" }
   ]
 }

@@ -35,6 +35,9 @@ and the code in the same commit (doc 01 §6).
 | [ADR-0007](adr/0007-validity-value-bearing-split.md)      | Validity invariant split into value-bearing / non-value-bearing |
 | [ADR-0008](adr/0008-layer-numbers-follow-dependencies.md) | Layer numbers express dependency direction, not roadmap order   |
 | [ADR-0009](adr/0009-dataflash-binary-only.md)             | Phase B decodes binary .BIN only; text .log is out of scope     |
+| [ADR-0010](adr/0010-shared-pipeline-package.md)           | One shared pipeline package, so CLI and browser cannot disagree |
+| [ADR-0011](adr/0011-local-plane-projection.md)            | Local tangent-plane projection; no basemap is fetched           |
+| [ADR-0012](adr/0012-comparison-verdict-contract.md)       | Comparison has three verdicts; an unexamined axis is never SAME |
 
 ADR numbering starts at 0005 because doc 01 §2 and §4 already cite those identifiers; earlier
 numbers are reserved for the decisions recorded directly in documents 01-05.

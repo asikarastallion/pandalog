@@ -295,7 +295,25 @@ canonical signal values within documented interpolation tolerance.
 
 ---
 
-## Phase J — Comparison
+## Phase J — Comparison ✅ complete
+
+Verified 2026-08-17: `pnpm verify` green, 929 tests, comparison package at 97.09% statement
+coverage.
+
+**The acceptance criterion is passed by a function that returns "no difference" unconditionally**,
+so it is not run alone. Every self-comparison is paired with a cross-comparison of the same fixtures
+that must come back `DIFFERENT`, and seven deliberate defects were injected to confirm the checks
+fail when the logic is wrong (always-SAME verification, ignoring `INCOMPARABLE` when combining
+verdicts, aligning flights with different time origins, comparing across different requirement sets,
+an always-SAME signals axis, treating two absent signals as a match, and ignoring the event-timing
+tolerance). All seven were caught; a comment-only control edit stayed green.
+
+ADR-0012 records the contract this phase introduces: a comparison has **three** answers, and an axis
+that was not compared is never reported as showing no difference. The ways a cross-flight comparison
+fails are quiet ones — mismatched time origins, a signal whose unit changed, windows that never
+overlap, two reports answering different requirement sets — and under a boolean every one of them
+is indistinguishable from a clean result. `INCOMPARABLE` is to comparison what `INCONCLUSIVE` is to
+verification (doc 03 §3), one stage further down the pipeline.
 
 **Package:** `@pandalog/comparison`
 

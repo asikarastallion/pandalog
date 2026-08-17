@@ -241,6 +241,7 @@ describe('the repository itself obeys the manifest', () => {
     expect(withSource.map((entry) => entry.package).sort()).toEqual([
       '@pandalog/analysis',
       '@pandalog/cli',
+      '@pandalog/comparison',
       '@pandalog/core-domain',
       '@pandalog/events',
       '@pandalog/ingestion',

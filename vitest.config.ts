@@ -22,6 +22,7 @@ export default defineConfig({
       '@pandalog/analysis': pkgSrc('analysis'),
       '@pandalog/verification': pkgSrc('verification'),
       '@pandalog/pipeline': pkgSrc('pipeline'),
+      '@pandalog/comparison': pkgSrc('comparison'),
       '@pandalog/web': path.resolve(import.meta.dirname, 'apps', 'web', 'src'),
       '@pandalog/cli': pkgSrc('cli'),
     },
