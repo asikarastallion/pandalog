@@ -446,18 +446,18 @@
         ],
         [
           0.8,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1.2,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1.4,
@@ -706,18 +706,18 @@
         ],
         [
           0.8,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1.2,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1.4,
@@ -771,18 +771,18 @@
         ],
         [
           0.8,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1.2,
-          0,
-          "VALID"
+          "NaN",
+          "INVALID"
         ],
         [
           1.4,

@@ -23,8 +23,8 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through H complete;
-I — Map / 3D / Playback, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through I complete;
+J — Comparison, next.**
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
@@ -132,6 +132,12 @@ Three things the workspace deliberately will not do:
 - **Collapse four verification outcomes into two.** `INCONCLUSIVE` and `NOT_APPLICABLE` are shown as
   themselves, with their meaning spelled out, not folded into a tick.
 - **Present a provisional criterion as a settled one.** Every threshold displays its `basis`.
+- **Fly the aircraft through a GNSS dropout.** Playback has no position while the receiver had no
+  fix, and the ground track breaks rather than drawing a leg nobody recorded.
+
+The map fetches no tiles. A basemap would send the flight's coordinates to a third party every time
+someone looked at them, so the track is drawn to scale with its geographic bounds labelled instead
+(ADR-0011).
 
 ## Architecture
 

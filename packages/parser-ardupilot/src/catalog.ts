@@ -93,6 +93,43 @@ export const TIME_FIELD = 'TimeUS';
  * Messages turned into `sourceEvents` rather than signals: they are discrete occurrences carried
  * by the log itself, which is exactly what `CanonicalFlightDataset.sourceEvents` is for (doc 02 §2).
  */
+/**
+ * A field whose value only means anything when another field in the same record says so.
+ *
+ * ArduPilot writes `Lat`/`Lng`/`Alt` as literal zeros when the receiver has no fix. Those are not
+ * measurements — they are the absence of one, written as a number. Passing them through as `VALID`
+ * would put the aircraft at 0°N 0°E and let every consumer downstream believe it, which is doc 04
+ * §1 rule 6 violated by the log rather than by us. This package is the only layer that sees both
+ * the coordinate and the status that invalidates it, so it is where the two are reconciled.
+ */
+export interface RecordPrecondition {
+  /** Field in the same record that decides whether the gated fields mean anything. */
+  readonly gateLabel: string;
+  /** The gated fields are measurements only when the gate reads at least this. */
+  readonly minimum: number;
+  readonly gatedLabels: readonly string[];
+  /** Where the threshold comes from — same discipline as an analysis threshold (doc 03 §4). */
+  readonly basis: string;
+  readonly reason: string;
+}
+
+/**
+ * ArduPilot `GPS.Status`: 0 = no GPS, 1 = no fix, 2 = 2D fix, 3 = 3D fix, and higher values are
+ * 3D fixes with augmentation. Below 3 there is no usable position solution, so a latitude and
+ * longitude cannot be a reading of where the aircraft was.
+ *
+ * Altitude is gated with them: it comes from the same solution, and a 2D fix does not produce one.
+ */
+export const RECORD_PRECONDITIONS: Readonly<Record<string, RecordPrecondition>> = Object.freeze({
+  GPS: Object.freeze({
+    gateLabel: 'Status',
+    minimum: 3,
+    gatedLabels: Object.freeze(['Lat', 'Lng', 'Alt']),
+    basis: 'spec:ardupilot-gps-status',
+    reason: 'the receiver reported no 3D fix, so the logged position is a placeholder zero',
+  }),
+});
+
 export const SOURCE_EVENT_MESSAGES: Readonly<Record<string, string>> = Object.freeze({
   MODE: 'mode-change',
   ERR: 'error',

@@ -6,13 +6,16 @@
  * wiring — reading a dropped file, handing its bytes to the Worker, routing the result into the
  * store — and no domain logic whatsoever. Every number the views render came out of the packages.
  */
-import { onBeforeUnmount, ref } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 
+import AttitudeView from './components/AttitudeView.vue';
 import EventTimeline from './components/EventTimeline.vue';
 import FindingsList from './components/FindingsList.vue';
 import FlightSummary from './components/FlightSummary.vue';
+import GroundTrackMap from './components/GroundTrackMap.vue';
 import InvestigationPanel from './components/InvestigationPanel.vue';
 import LogDropZone from './components/LogDropZone.vue';
+import PlaybackControls from './components/PlaybackControls.vue';
 import VerificationPanel from './components/VerificationPanel.vue';
 import { createDefaultPipelineClient, type PipelineClient } from './workers/client.js';
 import { createWorkspace } from './workspace/state.js';
@@ -37,7 +40,39 @@ async function open(file: File): Promise<void> {
   }
 }
 
+/**
+ * The playback loop.
+ *
+ * Driven by requestAnimationFrame off the wall clock, so playback runs at real time regardless of
+ * frame rate — stepping by a fixed amount per frame would make the same flight play back at
+ * different speeds on different machines.
+ */
+let frame = 0;
+let lastFrameMs = 0;
+
+function tick(nowMs: number): void {
+  const deltaSeconds = lastFrameMs === 0 ? 0 : (nowMs - lastFrameMs) / 1000;
+  lastFrameMs = nowMs;
+  workspace.advance(deltaSeconds);
+
+  if (workspace.isPlaying.value) {
+    frame = requestAnimationFrame(tick);
+  }
+}
+
+watch(
+  () => workspace.isPlaying.value,
+  (playing) => {
+    cancelAnimationFrame(frame);
+    lastFrameMs = 0;
+    if (playing) {
+      frame = requestAnimationFrame(tick);
+    }
+  },
+);
+
 onBeforeUnmount(() => {
+  cancelAnimationFrame(frame);
   client.value?.dispose();
 });
 </script>
@@ -76,6 +111,23 @@ onBeforeUnmount(() => {
           :not-applicable-rule-ids="workspace.result.value.notApplicableRuleIds"
           @select="workspace.selectFinding"
         />
+      </div>
+
+      <div class="column middle">
+        <PlaybackControls
+          v-if="workspace.flightWindow.value"
+          :window="workspace.flightWindow.value"
+          :t-seconds="workspace.playbackTime.value"
+          :playing="workspace.isPlaying.value"
+          @seek="workspace.seek"
+          @set-playing="workspace.setPlaying"
+        />
+        <GroundTrackMap
+          v-if="workspace.groundTrack.value"
+          :track="workspace.groundTrack.value"
+          :playback="workspace.playback.value"
+        />
+        <AttitudeView :playback="workspace.playback.value" />
       </div>
 
       <div class="column right">
@@ -152,10 +204,16 @@ h1 {
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(20rem, 26rem) 1fr;
+  grid-template-columns: minmax(18rem, 22rem) minmax(16rem, 20rem) 1fr;
   gap: 1.25rem;
   padding: 1.25rem;
   align-items: start;
+}
+
+@media (max-width: 90rem) {
+  .workspace {
+    grid-template-columns: minmax(18rem, 22rem) 1fr;
+  }
 }
 
 @media (max-width: 60rem) {

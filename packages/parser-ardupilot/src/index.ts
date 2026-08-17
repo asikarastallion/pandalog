@@ -41,3 +41,6 @@ export {
   toParsedFlightData,
 } from './adapter.js';
 export type { AdapterDiagnostics, ArduPilotParseResult } from './adapter.js';
+
+export { RECORD_PRECONDITIONS } from './catalog.js';
+export type { RecordPrecondition } from './catalog.js';

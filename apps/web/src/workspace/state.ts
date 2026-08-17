@@ -22,6 +22,8 @@ import type { PipelineResult } from '@pandalog/pipeline';
 import { timeSpanOf, type TimeWindow } from '@pandalog/query';
 
 import { findingsByTime, openInvestigation, type Investigation } from './investigation.js';
+import { playbackStateAt, type PlaybackState } from './playback.js';
+import { buildGroundTrack, type GroundTrack } from './track.js';
 
 /** How much flight either side of a finding's evidence to show for context. */
 const CONTEXT_PADDING_SECONDS = 1;
@@ -44,11 +46,22 @@ export interface Workspace {
   /** The whole flight's extent, for placing an investigation against the full timeline. */
   readonly flightWindow: ComputedRef<TimeWindow | null>;
 
+  /** Playback clock. UI state (doc 01 §5) — the flight data it reads is not. */
+  readonly playbackTime: Readonly<Ref<number>>;
+  readonly isPlaying: Readonly<Ref<boolean>>;
+  /** The vehicle's state at `playbackTime`, derived rather than stored. */
+  readonly playback: ComputedRef<PlaybackState | null>;
+  readonly groundTrack: ComputedRef<GroundTrack | null>;
+
   beginLoad(fileName: string): void;
   setResult(fileName: string, result: PipelineResult): void;
   failLoad(fileName: string, message: string): void;
   selectFinding(findingId: string | null): void;
   toggleExtraSignal(signalId: string): void;
+  seek(tSeconds: number): void;
+  setPlaying(playing: boolean): void;
+  /** Advance the clock by a wall-clock delta, stopping at the end of the flight. */
+  advance(deltaSeconds: number): void;
   reset(): void;
 }
 
@@ -75,6 +88,9 @@ export function createWorkspace(): Workspace {
     });
   });
 
+  const playbackTime = shallowRef(0);
+  const isPlaying = shallowRef(false);
+
   const availableSignalIds = computed(() =>
     [...(result.value?.dataset.signals.keys() ?? [])].sort((a, b) => a.localeCompare(b)),
   );
@@ -97,6 +113,24 @@ export function createWorkspace(): Workspace {
       : null;
   });
 
+  const playback = computed<PlaybackState | null>(() => {
+    const current = result.value;
+    return current === null ? null : playbackStateAt(current, playbackTime.value);
+  });
+
+  const groundTrack = computed<GroundTrack | null>(() => {
+    const current = result.value;
+    return current === null ? null : buildGroundTrack(current.dataset);
+  });
+
+  const clampToFlight = (tSeconds: number): number => {
+    const span = flightWindow.value;
+    if (span === null) {
+      return tSeconds;
+    }
+    return Math.min(Math.max(tSeconds, span.startSeconds), span.endSeconds);
+  };
+
   return {
     load: readonly(load),
     result: readonly(result),
@@ -106,12 +140,18 @@ export function createWorkspace(): Workspace {
     investigation,
     availableSignalIds,
     flightWindow,
+    playbackTime: readonly(playbackTime),
+    isPlaying: readonly(isPlaying),
+    playback,
+    groundTrack,
 
     beginLoad(fileName: string): void {
       load.value = { status: 'loading', fileName };
       result.value = null;
       selectedFindingId.value = null;
       extraSignalIds.value = [];
+      playbackTime.value = 0;
+      isPlaying.value = false;
     },
 
     setResult(fileName: string, next: PipelineResult): void {
@@ -120,6 +160,10 @@ export function createWorkspace(): Workspace {
       // Open the first finding by flight time, so the workspace lands on something to investigate
       // rather than an empty pane. Null when the flight produced none, which is itself the answer.
       selectedFindingId.value = findingsByTime(next.findings)[0]?.finding.id ?? null;
+      isPlaying.value = false;
+      // Start the clock at the beginning of the flight, not at zero: a log whose time base does
+      // not start at zero would otherwise open on an instant before any data exists.
+      playbackTime.value = clampToFlight(Number.NEGATIVE_INFINITY);
     },
 
     failLoad(fileName: string, message: string): void {
@@ -130,6 +174,25 @@ export function createWorkspace(): Workspace {
 
     selectFinding(findingId: string | null): void {
       selectedFindingId.value = findingId;
+    },
+
+    seek(tSeconds: number): void {
+      playbackTime.value = clampToFlight(tSeconds);
+    },
+
+    setPlaying(playing: boolean): void {
+      isPlaying.value = playing;
+    },
+
+    advance(deltaSeconds: number): void {
+      const span = flightWindow.value;
+      const next = playbackTime.value + deltaSeconds;
+      if (span !== null && next >= span.endSeconds) {
+        playbackTime.value = span.endSeconds;
+        isPlaying.value = false;
+        return;
+      }
+      playbackTime.value = clampToFlight(next);
     },
 
     toggleExtraSignal(signalId: string): void {
@@ -144,6 +207,8 @@ export function createWorkspace(): Workspace {
       result.value = null;
       selectedFindingId.value = null;
       extraSignalIds.value = [];
+      playbackTime.value = 0;
+      isPlaying.value = false;
     },
   };
 }

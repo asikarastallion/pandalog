@@ -1,7 +1,7 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-H complete; I next.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-I complete; J next.**
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -265,7 +265,24 @@ drag-and-drop or the File System Access API and never leave the client.
 
 ---
 
-## Phase I — Map / 3D / Playback
+## Phase I — Map / 3D / Playback ✅ complete
+
+Verified 2026-08-17: `pnpm verify` green, 858 tests, and confirmed in a real browser — scrubbing
+into the GNSS outage removes the position rather than holding the last fix.
+
+**A correctness defect in the canonical model was found and fixed here.** ArduPilot writes
+`Lat`/`Lng`/`Alt` as literal zeros when the receiver has no fix, and the parser was passing them
+through as `VALID` — a dataset asserting the aircraft was at 0°N 0°E, which playback would have
+animated and a ground track would have flown to and back. `parser-ardupilot` is the only layer that
+sees both the coordinate and the `Status` field that invalidates it, so it now gates them
+(`RECORD_PRECONDITIONS`, basis `spec:ardupilot-gps-status`). Two dataset goldens moved; nothing
+downstream did, because `gps.fix_type` itself was always correct.
+
+Two decisions are recorded in ADR-0011: the local tangent-plane projection lives in
+`@pandalog/core-domain` (an earth model is a conversion, doc 04 §1 rule 7) and produces a rendering
+artifact rather than a model type, so `packages/schema` is untouched as this phase requires; and
+**no basemap is fetched**, because tiles would send the flight's coordinates to a third party from
+an application that promises the log never leaves the machine (doc 01 §2).
 
 **App:** `apps/web` (extends)
 

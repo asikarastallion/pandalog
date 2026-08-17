@@ -31,7 +31,12 @@ import {
 import type { ParsedFlightData, ParserAdapter, SourceFile } from '@pandalog/ingestion';
 import { Validity, type Signal, type SourceEvent } from '@pandalog/schema';
 
-import { lookupSignal, SOURCE_EVENT_MESSAGES, TIME_FIELD } from './catalog.js';
+import {
+  lookupSignal,
+  RECORD_PRECONDITIONS,
+  SOURCE_EVENT_MESSAGES,
+  TIME_FIELD,
+} from './catalog.js';
 import {
   decodeDataflash,
   HEAD_BYTE_1,
@@ -105,6 +110,15 @@ export function toParsedFlightData(log: DataflashLog): ArduPilotParseResult {
       continue;
     }
 
+    // A record may carry a field that invalidates others in the same record — a GPS position is
+    // only a measurement when the receiver had a fix (catalog `RECORD_PRECONDITIONS`).
+    const precondition = RECORD_PRECONDITIONS[record.name];
+    let preconditionFailed = false;
+    if (precondition !== undefined) {
+      const gate = record.fields.get(precondition.gateLabel);
+      preconditionFailed = typeof gate === 'number' && gate < precondition.minimum;
+    }
+
     for (const [label, value] of record.fields) {
       if (label === TIME_FIELD) {
         continue;
@@ -126,7 +140,11 @@ export function toParsedFlightData(log: DataflashLog): ArduPilotParseResult {
         accumulators.set(mapping.id, accumulator);
       }
       accumulator.times.push(t);
-      accumulator.values.push(value);
+      // NaN here becomes INVALID below, which is the honest record of "the vehicle wrote a number
+      // and it does not mean what the field name says".
+      accumulator.values.push(
+        preconditionFailed && precondition?.gatedLabels.includes(label) === true ? NaN : value,
+      );
     }
   }
 
