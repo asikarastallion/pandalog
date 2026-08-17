@@ -17,7 +17,7 @@
 import { parseArgs, USAGE, type VerifyCommand } from './args.js';
 import { EXIT, exitCodeFor, type ExitCode } from './exit-codes.js';
 import { buildDocument, summarise } from './output.js';
-import { runPipeline } from './pipeline.js';
+import { runPipeline } from '@pandalog/pipeline';
 
 /** The package version, asserted against `package.json` by a test so the two cannot drift. */
 export const CLI_VERSION = '0.1.0';

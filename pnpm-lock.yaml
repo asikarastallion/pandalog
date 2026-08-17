@@ -56,21 +56,9 @@ importers:
       '@pandalog/analysis':
         specifier: workspace:*
         version: link:../analysis
-      '@pandalog/core-domain':
+      '@pandalog/pipeline':
         specifier: workspace:*
-        version: link:../core-domain
-      '@pandalog/events':
-        specifier: workspace:*
-        version: link:../events
-      '@pandalog/ingestion':
-        specifier: workspace:*
-        version: link:../ingestion
-      '@pandalog/parser-ardupilot':
-        specifier: workspace:*
-        version: link:../parser-ardupilot
-      '@pandalog/query':
-        specifier: workspace:*
-        version: link:../query
+        version: link:../pipeline
       '@pandalog/schema':
         specifier: workspace:*
         version: link:../schema
@@ -116,6 +104,33 @@ importers:
       '@pandalog/schema':
         specifier: workspace:*
         version: link:../schema
+
+  packages/pipeline:
+    dependencies:
+      '@pandalog/analysis':
+        specifier: workspace:*
+        version: link:../analysis
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/events':
+        specifier: workspace:*
+        version: link:../events
+      '@pandalog/ingestion':
+        specifier: workspace:*
+        version: link:../ingestion
+      '@pandalog/parser-ardupilot':
+        specifier: workspace:*
+        version: link:../parser-ardupilot
+      '@pandalog/query':
+        specifier: workspace:*
+        version: link:../query
+      '@pandalog/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@pandalog/verification':
+        specifier: workspace:*
+        version: link:../verification
 
   packages/query:
     dependencies:

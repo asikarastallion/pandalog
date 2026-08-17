@@ -33,9 +33,9 @@
       "layer": 3,
       "package": "@pandalog/parser-ardupilot",
       "path": "packages/parser-ardupilot",
-      "responsibility": "ArduPilot DataFlash (.BIN) binary decoding, FMT/message-table handling, adapter implementation for the ingestion contract. Text .log is out of scope (ADR-0009).",
+      "responsibility": "ArduPilot DataFlash (.BIN) binary decoding, FMT/message-table handling, adapter implementation for the ingestion contract. Text .log is out of scope (ADR-0009). Platform neutral: runs in a browser Worker unchanged (ADR-0010).",
       "allowedDependencies": ["@pandalog/schema", "@pandalog/core-domain", "@pandalog/ingestion"],
-      "platformNeutral": false,
+      "platformNeutral": true,
       "introducedInPhase": "B"
     },
     {
@@ -86,10 +86,10 @@
       "introducedInPhase": "F"
     },
     {
-      "layer": 11,
-      "package": "@pandalog/cli",
-      "path": "packages/cli",
-      "responsibility": "Headless command-line execution of ingestion, analysis, verification, and report generation.",
+      "layer": 8,
+      "package": "@pandalog/pipeline",
+      "path": "packages/pipeline",
+      "responsibility": "The deterministic pipeline composed once: ingest -> detect events -> analyse -> verify. Holds which detectors, rules and requirement set run, so every application asks the same question (ADR-0010).",
       "allowedDependencies": [
         "@pandalog/schema",
         "@pandalog/core-domain",
@@ -98,29 +98,9 @@
         "@pandalog/query",
         "@pandalog/events",
         "@pandalog/analysis",
-        "@pandalog/verification",
-        "@pandalog/reporting"
+        "@pandalog/verification"
       ],
-      "platformNeutral": false,
-      "introducedInPhase": "G"
-    },
-    {
-      "layer": 11,
-      "package": "@pandalog/web",
-      "path": "apps/web",
-      "responsibility": "Vue application: investigation workspace, plots, map/3D, comparison, report preview. Consumes application services only.",
-      "allowedDependencies": [
-        "@pandalog/schema",
-        "@pandalog/core-domain",
-        "@pandalog/ingestion",
-        "@pandalog/parser-ardupilot",
-        "@pandalog/query",
-        "@pandalog/events",
-        "@pandalog/analysis",
-        "@pandalog/verification",
-        "@pandalog/reporting"
-      ],
-      "platformNeutral": false,
+      "platformNeutral": true,
       "introducedInPhase": "H"
     },
     {
@@ -141,6 +121,20 @@
     },
     {
       "layer": 10,
+      "package": "@pandalog/ai",
+      "path": "packages/ai",
+      "responsibility": "Context builder over evidence + LLM client wrapper. Explains/summarizes/hypothesizes; never overrides deterministic results.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/analysis",
+        "@pandalog/verification",
+        "@pandalog/comparison"
+      ],
+      "platformNeutral": false,
+      "introducedInPhase": "L"
+    },
+    {
+      "layer": 10,
       "package": "@pandalog/reporting",
       "path": "packages/reporting",
       "responsibility": "Renders structured analysis/verification/comparison artifacts into reproducible report documents. Performs no calculation.",
@@ -155,18 +149,44 @@
       "introducedInPhase": "K"
     },
     {
-      "layer": 10,
-      "package": "@pandalog/ai",
-      "path": "packages/ai",
-      "responsibility": "Context builder over evidence + LLM client wrapper. Explains/summarizes/hypothesizes; never overrides deterministic results.",
+      "layer": 11,
+      "package": "@pandalog/cli",
+      "path": "packages/cli",
+      "responsibility": "Headless command-line execution of ingestion, analysis, verification, and report generation.",
       "allowedDependencies": [
         "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/ingestion",
+        "@pandalog/parser-ardupilot",
+        "@pandalog/query",
+        "@pandalog/events",
         "@pandalog/analysis",
         "@pandalog/verification",
-        "@pandalog/comparison"
+        "@pandalog/pipeline",
+        "@pandalog/reporting"
       ],
       "platformNeutral": false,
-      "introducedInPhase": "L"
+      "introducedInPhase": "G"
+    },
+    {
+      "layer": 11,
+      "package": "@pandalog/web",
+      "path": "apps/web",
+      "responsibility": "Vue application: investigation workspace, plots, map/3D, comparison, report preview. Consumes application services only.",
+      "allowedDependencies": [
+        "@pandalog/schema",
+        "@pandalog/core-domain",
+        "@pandalog/ingestion",
+        "@pandalog/parser-ardupilot",
+        "@pandalog/query",
+        "@pandalog/events",
+        "@pandalog/analysis",
+        "@pandalog/verification",
+        "@pandalog/pipeline",
+        "@pandalog/reporting"
+      ],
+      "platformNeutral": false,
+      "introducedInPhase": "H"
     }
   ],
   "rules": [

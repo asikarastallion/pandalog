@@ -14,7 +14,7 @@ import type { SourceProvenance, TimeBase, Vehicle } from '@pandalog/schema';
 import type { VerificationReport } from '@pandalog/verification';
 
 import type { ExitCode } from './exit-codes.js';
-import type { PipelineResult } from './pipeline.js';
+import type { PipelineResult } from '@pandalog/pipeline';
 
 export interface CliDocument {
   readonly tool: { readonly name: 'pandalog'; readonly version: string };

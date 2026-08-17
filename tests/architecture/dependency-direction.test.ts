@@ -125,12 +125,23 @@ describe('the checker detects each violation it exists to detect', () => {
   });
 
   it('allows Node builtins in packages that are not platformNeutral', () => {
-    const violations = checkDependencies(
-      manifest,
-      scanned('@pandalog/parser-ardupilot', ['node:fs']),
-    );
+    // The CLI reads files and owns a process; that is its whole reason to exist. Note that
+    // `@pandalog/parser-ardupilot` is *not* the example here any more — it became platformNeutral
+    // in ADR-0010 so the browser Worker's use of it is enforced rather than assumed.
+    const violations = checkDependencies(manifest, scanned('@pandalog/cli', ['node:fs']));
 
     expect(violations).toEqual([]);
+  });
+
+  it('holds every package the browser must run to the platform-neutral rule (ADR-0010)', () => {
+    const browserPackages = ['@pandalog/parser-ardupilot', '@pandalog/pipeline'];
+
+    for (const name of browserPackages) {
+      expect(
+        kinds(checkDependencies(manifest, scanned(name, ['node:fs']))),
+        `${name} must not be allowed a Node builtin: apps/web runs it in a Worker`,
+      ).toEqual(['NODE_IMPORT_IN_PLATFORM_NEUTRAL']);
+    }
   });
 
   it('catches a package importing an application', () => {
@@ -234,6 +245,7 @@ describe('the repository itself obeys the manifest', () => {
       '@pandalog/events',
       '@pandalog/ingestion',
       '@pandalog/parser-ardupilot',
+      '@pandalog/pipeline',
       '@pandalog/query',
       '@pandalog/schema',
       '@pandalog/verification',

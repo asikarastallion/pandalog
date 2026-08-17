@@ -12,9 +12,6 @@ export type { ParsedArgs, VerifyCommand } from './args.js';
 export { EXIT, exitCodeFor } from './exit-codes.js';
 export type { ExitCode } from './exit-codes.js';
 
-export { runPipeline } from './pipeline.js';
-export type { PipelineInput, PipelineResult } from './pipeline.js';
-
 export { buildDocument, summarise } from './output.js';
 export type { CliDocument, DocumentInput } from './output.js';
 

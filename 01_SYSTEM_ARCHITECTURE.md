@@ -88,6 +88,7 @@ Authoritative machine-readable form: `docs/architecture/dependency-layers.json`.
 | 5     | `@pandalog/events`           | schema, core-domain, query                                 | D     |
 | 6     | `@pandalog/analysis`         | schema, core-domain, query, events                         | E     |
 | 7     | `@pandalog/verification`     | schema, core-domain, query, events, analysis               | F     |
+| 8     | `@pandalog/pipeline`         | everything through verification                            | H     |
 | 9     | `@pandalog/comparison`       | schema, core-domain, query, events, analysis, verification | J     |
 | 10    | `@pandalog/reporting`        | schema, core-domain, analysis, verification, comparison    | K     |
 | 10    | `@pandalog/ai`               | schema, analysis, verification, comparison                 | L     |
@@ -103,12 +104,16 @@ Rules (enforced by test, see §5):
 1. Dependencies only point toward lower layer numbers.
 2. `apps/web` and `@pandalog/cli` are the only packages that may depend on the full stack; no
    package below layer 8 may import from either.
-3. `@pandalog/schema` and `@pandalog/core-domain` and `@pandalog/query`, `@pandalog/events`,
-   `@pandalog/analysis`, `@pandalog/verification`, `@pandalog/comparison`, `@pandalog/reporting`
-   are `platformNeutral: true` — no `node:*` imports, runnable in a worker or in Node without
-   modification.
-4. `@pandalog/parser-ardupilot`, `@pandalog/cli`, `@pandalog/ai`, `apps/web` are allowed
-   platform-specific code (file I/O, network, DOM) because their responsibility requires it.
+3. `@pandalog/schema`, `@pandalog/core-domain`, `@pandalog/parser-ardupilot`, `@pandalog/query`,
+   `@pandalog/events`, `@pandalog/analysis`, `@pandalog/verification`, `@pandalog/pipeline`,
+   `@pandalog/comparison`, `@pandalog/reporting` are `platformNeutral: true` — no `node:*` imports,
+   runnable in a worker or in Node without modification. This is the mechanical form of §2's claim
+   that the browser runs the same code: the whole chain from a dropped `.BIN` to a verification
+   outcome is on this list (ADR-0010).
+4. `@pandalog/cli`, `@pandalog/ai`, `apps/web` are allowed platform-specific code (file I/O,
+   network, DOM) because their responsibility requires it. A future adapter that genuinely needs a
+   platform API declares `platformNeutral: false` for itself rather than reopening
+   `parser-ardupilot`.
 
 ## 4. Why this shape (ADR-0005 summary)
 

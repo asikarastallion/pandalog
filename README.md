@@ -55,6 +55,7 @@ CLI's own stderr summary says so rather than leaving it to be inferred.
 | [`@pandalog/events`](packages/events)                     | 5     | Flight event detection.                                                        | D ✅  |
 | [`@pandalog/analysis`](packages/analysis)                 | 6     | Deterministic rules → evidence-backed findings.                                | E ✅  |
 | [`@pandalog/verification`](packages/verification)         | 7     | Requirement definitions and evaluation.                                        | F ✅  |
+| [`@pandalog/pipeline`](packages/pipeline)                 | 8     | Ingest → detect → analyse → verify, composed once for every app.               | H ✅  |
 | `@pandalog/comparison`                                    | 9     | Flight-vs-flight / flight-vs-baseline comparison.                              | J     |
 | `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
 | `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |

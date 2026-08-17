@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { runPipeline } from '@pandalog/cli';
+import { runPipeline } from '@pandalog/pipeline';
 
 const FIXTURES = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

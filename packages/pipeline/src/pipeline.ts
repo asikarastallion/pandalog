@@ -5,20 +5,16 @@
  * bytes → ingest → detect events → run analysis → verify requirements
  * ```
  *
- * This module deliberately contains **no Node-specific code** — no `node:` import, no `process`, no
- * filesystem. It takes bytes and returns results. Doc 01 §2 says `apps/web` and `@pandalog/cli`
- * "differ only in how they invoke the core pipeline and where they read files from, not in what the
- * pipeline does", and keeping the composition platform-free is what makes that true rather than
- * aspirational: Phase H's worker can run this exact sequence.
- *
- * It lives in `@pandalog/cli` rather than in a package of its own because there is currently one
- * caller. If Phase H needs to share it, that is the moment to promote it — a decision made against
- * real pressure, with an ADR, rather than a package invented in advance of a second consumer
- * (doc 04's roadmap discipline).
+ * This package contains **no Node-specific code** — no `node:` import, no `process`, no filesystem —
+ * and the architecture test enforces that. Doc 01 §2 says `apps/web` and `@pandalog/cli` "differ
+ * only in how they invoke the core pipeline and where they read files from, not in what the pipeline
+ * does"; keeping the composition platform-free is what makes that true rather than aspirational. The
+ * browser Worker runs this exact sequence.
  *
  * What it holds is the *policy*: which detectors, which rules, which requirement set. Those choices
  * belong in one place, because two callers making them differently is how a tool starts giving two
- * answers to the same question.
+ * answers to the same question — and an engineer comparing a CI run against the same log opened in
+ * the browser would have no way to tell which was right (ADR-0010).
  */
 import {
   createDefaultRuleRegistry,

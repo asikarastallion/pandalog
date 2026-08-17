@@ -10,12 +10,8 @@
   "include": ["src/**/*.ts"],
   "references": [
     { "path": "../schema" },
-    { "path": "../core-domain" },
-    { "path": "../ingestion" },
-    { "path": "../parser-ardupilot" },
-    { "path": "../query" },
-    { "path": "../events" },
     { "path": "../analysis" },
-    { "path": "../verification" }
+    { "path": "../verification" },
+    { "path": "../pipeline" }
   ]
 }
