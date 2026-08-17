@@ -50,31 +50,36 @@ async function buildContext(name: string): Promise<RequirementContext> {
   return { dataset, events, findings, now };
 }
 
-describe.each(['nominal.bin', 'gps-glitch.bin', 'mode-change-error.bin'])('%s', (name) => {
-  it('verifies to the expected outcomes', async () => {
-    const report = verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, await buildContext(name));
+describe.each(['nominal.bin', 'gps-glitch.bin', 'mode-change-error.bin', 'degraded-flight.bin'])(
+  '%s',
+  (name) => {
+    it('verifies to the expected outcomes', async () => {
+      const report = verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, await buildContext(name));
 
-    await expect(JSON.stringify(report, null, 2)).toMatchFileSnapshot(
-      path.join(FIXTURES, `${name.replace(/\.bin$/, '')}.verification.json`),
-    );
-  });
+      await expect(JSON.stringify(report, null, 2)).toMatchFileSnapshot(
+        path.join(FIXTURES, `${name.replace(/\.bin$/, '')}.verification.json`),
+      );
+    });
 
-  it('is deterministic across repeated runs (doc 03 §6)', async () => {
-    const context = await buildContext(name);
+    it('is deterministic across repeated runs (doc 03 §6)', async () => {
+      const context = await buildContext(name);
 
-    expect(JSON.stringify(verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, context))).toBe(
-      JSON.stringify(verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, context)),
-    );
-  });
+      expect(JSON.stringify(verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, context))).toBe(
+        JSON.stringify(verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, context)),
+      );
+    });
 
-  it('never reports a PASS that cites nothing', async () => {
-    const report = verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, await buildContext(name));
+    it('never reports a PASS that cites nothing', async () => {
+      const report = verifyRequirements(PROVISIONAL_REQUIREMENT_SET_V1, await buildContext(name));
 
-    expect(report.evidenceRuleViolations).toEqual([]);
-    for (const result of report.results) {
-      if (result.outcome === 'PASS' || result.outcome === 'FAIL') {
-        expect(result.evidence.length, `${result.requirementId} cited nothing`).toBeGreaterThan(0);
+      expect(report.evidenceRuleViolations).toEqual([]);
+      for (const result of report.results) {
+        if (result.outcome === 'PASS' || result.outcome === 'FAIL') {
+          expect(result.evidence.length, `${result.requirementId} cited nothing`).toBeGreaterThan(
+            0,
+          );
+        }
       }
-    }
-  });
-});
+    });
+  },
+);

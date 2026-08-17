@@ -24,6 +24,9 @@ export {
 } from './units.js';
 export type { KnownSourceUnit } from './units.js';
 
+export { DISPLAY_UNIT_OF, DISPLAY_UNITS, toDisplayUnit } from './display.js';
+export type { DisplayValue } from './display.js';
+
 export { createTimeBase } from './time.js';
 export type { CreateTimeBaseInput } from './time.js';
 

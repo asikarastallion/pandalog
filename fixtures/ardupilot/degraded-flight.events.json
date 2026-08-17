@@ -1,0 +1,92 @@
+[
+  {
+    "id": "events:logged-message:logged-message@0.000000#0",
+    "type": "logged-message",
+    "t_start_seconds": 0,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:logged-message",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:message",
+      "Message": "ArduCopter V4.5.0 (synthetic fixture)"
+    }
+  },
+  {
+    "id": "events:mode-change:mode-change@0.000000#0",
+    "type": "mode-change",
+    "t_start_seconds": 0,
+    "t_end_seconds": null,
+    "sourceSignalIds": [],
+    "detector": {
+      "name": "events:mode-change",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "source": "sourceEvent:mode-change",
+      "Mode": 5,
+      "ModeNum": 5,
+      "Rsn": 1
+    }
+  },
+  {
+    "id": "events:vibration-excursion:vibration-excursion@1.000000#0",
+    "type": "vibration-excursion",
+    "t_start_seconds": 1,
+    "t_end_seconds": 2.9,
+    "sourceSignalIds": [
+      "vibration.x",
+      "vibration.y",
+      "vibration.z"
+    ],
+    "detector": {
+      "name": "events:vibration-excursion",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "peakMagnitude": 43.30127018922193,
+      "durationSeconds": 1.9,
+      "sampleCount": 20,
+      "containsGap": false,
+      "threshold": 30,
+      "thresholdUnit": "m/s^2",
+      "thresholdBasis": "provisional",
+      "minDurationSeconds": 0.5,
+      "minDurationBasis": "provisional",
+      "derivation": {
+        "method": "query:magnitude3",
+        "version": "1.0.0",
+        "inputs": [
+          "vibration.x",
+          "vibration.y",
+          "vibration.z"
+        ]
+      }
+    }
+  },
+  {
+    "id": "events:gps-fix-loss:gps-fix-loss@3.000000#0",
+    "type": "gps-fix-loss",
+    "t_start_seconds": 3,
+    "t_end_seconds": 5.8,
+    "sourceSignalIds": [
+      "gps.fix_type"
+    ],
+    "detector": {
+      "name": "events:gps-fix-loss",
+      "version": "1.0.0"
+    },
+    "payload": {
+      "worstFixType": 1,
+      "durationSeconds": 2.8,
+      "sampleCount": 15,
+      "containsGap": false,
+      "thresholdFixType": 3,
+      "thresholdBasis": "spec:ardupilot-gps-status",
+      "minDurationSeconds": 0.2,
+      "minDurationBasis": "provisional"
+    }
+  }
+]

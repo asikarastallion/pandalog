@@ -286,11 +286,83 @@ function modeChangeAndError() {
   return concat(chunks);
 }
 
+// ---------------------------------------------------------------------------------------------
+// Fixture 4 — a degraded flight that actually trips the analysis rules.
+//
+// The first three fixtures exercise decoding and detection, but every analysis rule stays silent on
+// them, so nothing downstream of `packages/events` had real input: no fixture produced a Finding,
+// and therefore none produced a requirement FAIL backed by one. This one does, and it is what the
+// investigation workflow (doc 03 §5) is tested against — selecting a Finding is only meaningful if
+// a Finding exists.
+//
+// Three independent problems over 8 s, chosen so each rule fails for its own reason rather than
+// one fault cascading:
+//
+//   roll tracking  — commanded 12 deg against 2 deg actual for t=[2, 6]. A 10 deg error, well past
+//                    the 5 deg (0.0873 rad) provisional criterion, sustained long enough for the
+//                    trailing 2 s RMS window to clear it for more than the 1 s minimum.
+//   GNSS           — fix type drops to 1 for t=[3, 6]. Three seconds, past the 2 s provisional
+//                    tolerance, where gps-glitch.bin's 0.4 s outage deliberately is not.
+//   vibration      — 25 m/s^2 on each axis for t=[1, 3], magnitude 43.3, past the 30 m/s^2
+//                    criterion for longer than the 1 s minimum.
+//
+// Pitch tracks correctly throughout, so a rule firing on pitch would be a bug rather than a fixture
+// property. MODE and MSG records are present and no ERR is written, so REQ-ERR-001 has a record
+// stream to examine and returns PASS — the one requirement this flight meets.
+// ---------------------------------------------------------------------------------------------
+function degradedFlight() {
+  const chunks = [
+    fmtPacket('ATT', MESSAGES.ATT),
+    fmtPacket('GPS', MESSAGES.GPS),
+    fmtPacket('VIBE', MESSAGES.VIBE),
+    fmtPacket('MODE', MESSAGES.MODE),
+    fmtPacket('MSG', MESSAGES.MSG),
+    dataPacket(MESSAGES.MSG, [us(0.0), 'ArduCopter V4.5.0 (synthetic fixture)']),
+    dataPacket(MESSAGES.MODE, [us(0.0), 5, 5, 1]),
+  ];
+
+  const between = (t, start, end) => t >= start && t < end;
+
+  for (let i = 0; i < 80; i += 1) {
+    const t = i * 0.1;
+
+    const rollActual = 2;
+    const rollDesired = between(t, 2, 6) ? 12 : 2;
+    const pitch = 1.5;
+    chunks.push(dataPacket(MESSAGES.ATT, [us(t), rollDesired, rollActual, pitch, pitch, 90, 90]));
+
+    const vibration = between(t, 1, 3) ? 25 : 5;
+    chunks.push(dataPacket(MESSAGES.VIBE, [us(t), vibration, vibration, vibration]));
+
+    if (i % 2 === 0) {
+      const lostFix = between(t, 3, 6);
+      chunks.push(
+        dataPacket(MESSAGES.GPS, [
+          us(t),
+          lostFix ? 1 : 3,
+          200000 + i,
+          2300,
+          lostFix ? 2 : 14,
+          lostFix ? 99.99 : 0.8,
+          lostFix ? 0 : 39.5 + i * 1e-6,
+          lostFix ? 0 : 32.8 + i * 1e-6,
+          lostFix ? 0 : 855,
+          lostFix ? NaN : 6.4,
+          lostFix ? NaN : -0.2,
+        ]),
+      );
+    }
+  }
+
+  return concat(chunks);
+}
+
 mkdirSync(OUT_DIR, { recursive: true });
 for (const [name, build] of [
   ['nominal.bin', nominal],
   ['gps-glitch.bin', gpsGlitch],
   ['mode-change-error.bin', modeChangeAndError],
+  ['degraded-flight.bin', degradedFlight],
 ]) {
   const bytes = build();
   writeFileSync(path.join(OUT_DIR, name), bytes);

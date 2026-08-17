@@ -44,6 +44,7 @@ describe.each([
   ['nominal.bin', 0],
   ['gps-glitch.bin', 2],
   ['mode-change-error.bin', 1],
+  ['degraded-flight.bin', 1],
 ])('pandalog verify %s', (name, expectedExit) => {
   it('produces the expected CLI output', async () => {
     const sink = { stdout: '', stderr: '' };

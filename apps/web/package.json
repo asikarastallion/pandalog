@@ -1,0 +1,24 @@
+{
+  "name": "@pandalog/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vue investigation workspace. Static SPA, no backend (ADR-0006). Layer 11.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@pandalog/analysis": "workspace:*",
+    "@pandalog/core-domain": "workspace:*",
+    "@pandalog/events": "workspace:*",
+    "@pandalog/pipeline": "workspace:*",
+    "@pandalog/query": "workspace:*",
+    "@pandalog/schema": "workspace:*",
+    "@pandalog/verification": "workspace:*",
+    "vue": "^3.5.41"
+  }
+}

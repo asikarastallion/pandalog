@@ -23,8 +23,8 @@ every core package is built to run identically in a browser Worker or under Node
 
 ## Status
 
-Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through G complete;
-H — Web Investigation, next.**
+Roadmap runs A → L (`05_IMPLEMENTATION_ROADMAP.md`). Current phase: **A through H complete;
+I — Map / 3D / Playback, next.**
 
 `pnpm verify` is green, and the boundaries are enforced rather than agreed: the architecture test
 fails the build on an upward dependency, an undeclared import, or a `node:` import inside a package
@@ -36,9 +36,11 @@ requirement set — with the outcome of all four stages committed as golden fixt
 in [`fixtures/ardupilot/README.md`](fixtures/ardupilot/README.md): those fixtures are synthetic, so
 the parser is proven internally consistent but not yet validated against a real vehicle's log.
 
-`pandalog verify` runs that pipeline headless and returns a CI-usable exit code (see
-[Verifying a log](#verifying-a-log)). There is **no UI yet** — that is phase H, and building it
-before the data contracts were settled is exactly what the architecture forbids.
+Two front ends run that pipeline: `pandalog verify` headless with a CI-usable exit code (see
+[Verifying a log](#verifying-a-log)), and `apps/web`, a static browser workspace for investigating a
+finding down to the signals behind it (see [Investigating a flight](#investigating-a-flight)). They
+share one composition — `@pandalog/pipeline` — so a CI run and the same log opened in a browser
+cannot disagree about what happened.
 
 One limit is worth stating plainly rather than discovering later: **every threshold and every
 requirement currently in the repository is `provisional`.** Nothing here traces to a flight-test
@@ -60,7 +62,7 @@ CLI's own stderr summary says so rather than leaving it to be inferred.
 | `@pandalog/reporting`                                     | 10    | Reproducible report rendering (no calculation).                                | K     |
 | `@pandalog/ai`                                            | 10    | Optional explanatory layer over evidence. Removable without breaking the rest. | L     |
 | [`@pandalog/cli`](packages/cli)                           | 11    | Headless ingest → analyze → verify → report.                                   | G ✅  |
-| `apps/web`                                                | 11    | Vue investigation workspace.                                                   | H     |
+| [`apps/web`](apps/web)                                    | 11    | Vue investigation workspace.                                                   | H ✅  |
 
 Layer number orders dependencies, not build order: `cli` and `web` arrive in phases G and H but
 sit at the top because they consume everything beneath them (ADR-0008).
@@ -111,6 +113,25 @@ document. The exit status is what a CI pipeline reads:
 or NOT_APPLICABLE was not verified, and a green pipeline would report confidence PandaLog does not
 have. Operational failures use `sysexits.h` values so 0–2 stay reserved for what the verification
 actually concluded — a CI script can tell "the aircraft failed" from "the tool could not run".
+
+## Investigating a flight
+
+```bash
+pnpm dev:web            # or: pnpm build && serve apps/web/dist
+```
+
+Drop a `.BIN` onto the page. Parsing, analysis and verification run in a Web Worker in your own
+browser — there is no server to upload to. Selecting a finding opens doc 03 §5's investigation
+workflow: the evidence it rests on, the time window that evidence covers, and every signal it cites
+drawn synchronized on that window.
+
+Three things the workspace deliberately will not do:
+
+- **Draw through missing data.** A run of samples that were never recorded breaks the line and is
+  labelled as a gap. Interpolating across it would turn a GNSS dropout into a smooth glide.
+- **Collapse four verification outcomes into two.** `INCONCLUSIVE` and `NOT_APPLICABLE` are shown as
+  themselves, with their meaning spelled out, not folded into a tick.
+- **Present a provisional criterion as a settled one.** Every threshold displays its `basis`.
 
 ## Architecture
 

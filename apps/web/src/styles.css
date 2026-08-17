@@ -1,0 +1,86 @@
+/*
+ * Workspace styling.
+ *
+ * A dark, low-chroma surface with colour reserved for meaning: pass, fail, and the warning tone
+ * that marks a provisional criterion or absent data. Nothing here is decorative — if a colour
+ * appears, it is carrying information a reader would otherwise have to look up.
+ */
+
+:root {
+  --bg: #12141a;
+  --surface: #191c24;
+  --surface-raised: #1f232d;
+  --surface-sunken: #0f1116;
+
+  --border: #272c38;
+  --border-strong: #38404f;
+
+  --fg: #dfe3ec;
+  --fg-dim: #8b93a5;
+
+  --accent: #6ea8fe;
+  --accent-dim: #3d5a86;
+  --evidence-band: rgb(110 168 254 / 12%);
+
+  --pass: #57c98b;
+  --fail: #f0736a;
+  --warn: #e0b054;
+
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-raised: #f0f2f6;
+    --surface-sunken: #f2f4f8;
+
+    --border: #dfe3ea;
+    --border-strong: #c3cad6;
+
+    --fg: #1d2129;
+    --fg-dim: #616b7d;
+
+    --accent: #2f6fd0;
+    --accent-dim: #9dbaea;
+    --evidence-band: rgb(47 111 208 / 10%);
+
+    --pass: #1f8a4c;
+    --fail: #c33a30;
+    --warn: #9a6b12;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

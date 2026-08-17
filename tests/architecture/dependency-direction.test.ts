@@ -249,6 +249,7 @@ describe('the repository itself obeys the manifest', () => {
       '@pandalog/query',
       '@pandalog/schema',
       '@pandalog/verification',
+      '@pandalog/web',
     ]);
   });
 });

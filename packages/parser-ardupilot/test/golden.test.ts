@@ -54,21 +54,27 @@ function serialize(dataset: CanonicalFlightDataset): unknown {
   };
 }
 
-describe.each(['nominal.bin', 'gps-glitch.bin', 'mode-change-error.bin'])('%s', (name) => {
-  it('produces the expected canonical dataset', async () => {
-    const dataset = await ingest({ fileName: name, bytes: fixtureBytes(name) }, { registry, now });
+describe.each(['nominal.bin', 'gps-glitch.bin', 'mode-change-error.bin', 'degraded-flight.bin'])(
+  '%s',
+  (name) => {
+    it('produces the expected canonical dataset', async () => {
+      const dataset = await ingest(
+        { fileName: name, bytes: fixtureBytes(name) },
+        { registry, now },
+      );
 
-    await expect(JSON.stringify(serialize(dataset), null, 2)).toMatchFileSnapshot(
-      fixturePath(`${name.replace(/\.bin$/, '')}.expected.json`),
-    );
-  });
+      await expect(JSON.stringify(serialize(dataset), null, 2)).toMatchFileSnapshot(
+        fixturePath(`${name.replace(/\.bin$/, '')}.expected.json`),
+      );
+    });
 
-  it('is reproducible: ingesting twice yields an identical dataset', async () => {
-    // doc 03 §6 / doc 04 §7: the same inputs and versions must give the same output, which is what
-    // makes a report reproducible rather than merely repeatable-looking.
-    const first = await ingest({ fileName: name, bytes: fixtureBytes(name) }, { registry, now });
-    const second = await ingest({ fileName: name, bytes: fixtureBytes(name) }, { registry, now });
+    it('is reproducible: ingesting twice yields an identical dataset', async () => {
+      // doc 03 §6 / doc 04 §7: the same inputs and versions must give the same output, which is what
+      // makes a report reproducible rather than merely repeatable-looking.
+      const first = await ingest({ fileName: name, bytes: fixtureBytes(name) }, { registry, now });
+      const second = await ingest({ fileName: name, bytes: fixtureBytes(name) }, { registry, now });
 
-    expect(JSON.stringify(serialize(first))).toBe(JSON.stringify(serialize(second)));
-  });
-});
+      expect(JSON.stringify(serialize(first))).toBe(JSON.stringify(serialize(second)));
+    });
+  },
+);

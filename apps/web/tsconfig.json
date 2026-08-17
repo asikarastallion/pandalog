@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // The app is the only place DOM types exist. Keeping them here rather than in the base config
+    // is what stops a platform-neutral package from quietly reaching for `document` and still
+    // typechecking (doc 01 §3 rule 3).
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": [],
+
+    // Vite resolves bare specifiers itself and the app emits nothing through tsc.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "jsx": "preserve",
+    "allowImportingTsExtensions": true,
+
+    "paths": {
+      "@pandalog/schema": ["../../packages/schema/src/index.ts"],
+      "@pandalog/core-domain": ["../../packages/core-domain/src/index.ts"],
+      "@pandalog/query": ["../../packages/query/src/index.ts"],
+      "@pandalog/events": ["../../packages/events/src/index.ts"],
+      "@pandalog/analysis": ["../../packages/analysis/src/index.ts"],
+      "@pandalog/verification": ["../../packages/verification/src/index.ts"],
+      "@pandalog/pipeline": ["../../packages/pipeline/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "test/**/*.ts", "vite.config.ts"]
+}

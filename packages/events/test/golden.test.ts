@@ -32,36 +32,39 @@ const now = () => new Date('2026-01-01T00:00:00.000Z');
 
 const round = (value: number): number => Number(value.toFixed(6));
 
-describe.each(['nominal.bin', 'gps-glitch.bin', 'mode-change-error.bin'])('%s', (name) => {
-  const load = async () =>
-    ingest(
-      { fileName: name, bytes: new Uint8Array(readFileSync(path.join(FIXTURES, name))) },
-      { registry: adapters, now },
-    );
+describe.each(['nominal.bin', 'gps-glitch.bin', 'mode-change-error.bin', 'degraded-flight.bin'])(
+  '%s',
+  (name) => {
+    const load = async () =>
+      ingest(
+        { fileName: name, bytes: new Uint8Array(readFileSync(path.join(FIXTURES, name))) },
+        { registry: adapters, now },
+      );
 
-  it('detects the expected events', async () => {
-    const events = detectEvents(detectors, { dataset: await load() });
+    it('detects the expected events', async () => {
+      const events = detectEvents(detectors, { dataset: await load() });
 
-    const serialised = events.map((event) => ({
-      id: event.id,
-      type: event.type,
-      t_start_seconds: round(event.t_start_seconds),
-      t_end_seconds: event.t_end_seconds === null ? null : round(event.t_end_seconds),
-      sourceSignalIds: event.sourceSignalIds,
-      detector: event.detector,
-      payload: event.payload,
-    }));
+      const serialised = events.map((event) => ({
+        id: event.id,
+        type: event.type,
+        t_start_seconds: round(event.t_start_seconds),
+        t_end_seconds: event.t_end_seconds === null ? null : round(event.t_end_seconds),
+        sourceSignalIds: event.sourceSignalIds,
+        detector: event.detector,
+        payload: event.payload,
+      }));
 
-    await expect(JSON.stringify(serialised, null, 2)).toMatchFileSnapshot(
-      path.join(FIXTURES, `${name.replace(/\.bin$/, '')}.events.json`),
-    );
-  });
+      await expect(JSON.stringify(serialised, null, 2)).toMatchFileSnapshot(
+        path.join(FIXTURES, `${name.replace(/\.bin$/, '')}.events.json`),
+      );
+    });
 
-  it('is deterministic across repeated runs (doc 03 §6)', async () => {
-    const dataset = await load();
+    it('is deterministic across repeated runs (doc 03 §6)', async () => {
+      const dataset = await load();
 
-    expect(JSON.stringify(detectEvents(detectors, { dataset }))).toBe(
-      JSON.stringify(detectEvents(detectors, { dataset })),
-    );
-  });
-});
+      expect(JSON.stringify(detectEvents(detectors, { dataset }))).toBe(
+        JSON.stringify(detectEvents(detectors, { dataset })),
+      );
+    });
+  },
+);

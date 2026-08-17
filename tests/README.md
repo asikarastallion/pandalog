@@ -15,12 +15,18 @@ check (doc 04 §5).
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [`architecture/dependency-direction.test.ts`](architecture/dependency-direction.test.ts) | The package graph in `docs/architecture/dependency-layers.json` (doc 01 §6) |
 | [`architecture/schema-purity.test.ts`](architecture/schema-purity.test.ts)               | `@pandalog/schema` stays types-and-guards only (doc 02 §3 invariant 4)      |
+| [`architecture/ui-boundary.test.ts`](architecture/ui-boundary.test.ts)                   | Vue components hold no domain logic (doc 04 §1 rules 1, 2, 7)               |
 
 The dependency check is split so the rules can be tested independently of the filesystem:
 
 - `manifest.ts` — loads the manifest
 - `scan-imports.ts` — extracts module specifiers with the TypeScript compiler API, so `import`,
-  `import type`, `export … from`, dynamic `import()` and `import(...)` types are all seen
+  `import type`, `export … from`, dynamic `import()` and `import(...)` types are all seen. It reads
+  the `<script>` blocks of `.vue` files too: components are where the UI rules are most likely to be
+  broken, so leaving them unscanned would exempt the files the rules are aimed at.
+  `extractValueSpecifiers` reports only imports that bring in a _value_, which is what the UI
+  boundary check needs — a type is erased before anything runs and cannot make a component
+  compute.
 - `check-dependencies.ts` — the rules, as a pure function over (manifest, scanned imports)
 
 `dependency-direction.test.ts` feeds the pure checker deliberate violations _and_ runs it over the
@@ -88,11 +94,27 @@ import { something } from '@pandalog/web';
 Expected: `APPLICATION_IMPORTED`. Applications depend on packages; packages never depend on an
 application.
 
+### 6. A component doing domain work
+
+In any file under `apps/web/src/components/`:
+
+```ts
+import { toDisplayUnit } from '@pandalog/core-domain';
+const degrees = radians * (180 / Math.PI);
+```
+
+Expected: `ui-boundary.test.ts` fails twice — once for importing the conversion authority, once for
+the inline factor. Both belong in `apps/web/src/workspace/`, which is tested without a browser.
+`ui-boundary.test.ts` also runs these predicates over a fabricated component in-file, so the guard
+is proven without committing a violation.
+
 ## Guarding against a vacuous pass
 
 `dependency-direction.test.ts` asserts which packages were actually scanned. Without it, a typo in
 a manifest `path` would make every package scan zero files, and the suite would report success
-while checking nothing.
+while checking nothing. `ui-boundary.test.ts` does the same for components: it asserts that a script
+block was read out of each one, so a change to the `.vue` parsing cannot quietly reduce the check to
+inspecting nothing.
 
 ## Test conventions
 

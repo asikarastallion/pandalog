@@ -1,0 +1,171 @@
+{
+  "requirementSetId": "pandalog-provisional",
+  "requirementSetVersion": "1.0.0",
+  "requirementSetSource": "provisional",
+  "results": [
+    {
+      "requirementId": "REQ-ATT-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "FAIL",
+      "evidence": [
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.roll",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.roll.desired",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.pitch",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.pitch.desired",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.roll",
+          "t_start_seconds": 2.5,
+          "t_end_seconds": 7.4
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "attitude.roll.desired",
+          "t_start_seconds": 2.5,
+          "t_end_seconds": 7.4
+        },
+        {
+          "kind": "measurement",
+          "signalId": "attitude.roll.error.rms",
+          "t_seconds": 7.4,
+          "value": 0.17453292519943298,
+          "unit": "rad"
+        }
+      ],
+      "reason": "1 finding(s) from analysis:attitude-tracking-error exceeded its criterion over t=[0.000, 7.900]. The criterion is provisional and is not traceable to a flight-test document, so this FAIL states that a provisional criterion was exceeded — not that the aircraft breached a qualified limit.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "requirementId": "REQ-ERR-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "PASS",
+      "evidence": [
+        {
+          "kind": "event",
+          "eventId": "events:logged-message:logged-message@0.000000#0"
+        },
+        {
+          "kind": "event",
+          "eventId": "events:mode-change:mode-change@0.000000#0"
+        }
+      ],
+      "reason": "2 discrete log record(s) were examined over t=[0.000, 0.000] and none was an error. This assumes the firmware's error logging was enabled; the canonical dataset carries no logging-bitmask field, so PandaLog cannot confirm it.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "requirementId": "REQ-GNSS-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "FAIL",
+      "evidence": [
+        {
+          "kind": "signal-window",
+          "signalId": "gps.fix_type",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.8
+        },
+        {
+          "kind": "event",
+          "eventId": "events:gps-fix-loss:gps-fix-loss@3.000000#0"
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "gps.fix_type",
+          "t_start_seconds": 3,
+          "t_end_seconds": 5.8
+        },
+        {
+          "kind": "measurement",
+          "signalId": "gps.fix_type",
+          "t_seconds": 3,
+          "value": 1,
+          "unit": "unitless"
+        }
+      ],
+      "reason": "1 finding(s) from analysis:gps-availability exceeded its criterion over t=[0.000, 7.800]. The criterion is provisional and is not traceable to a flight-test document, so this FAIL states that a provisional criterion was exceeded — not that the aircraft breached a qualified limit.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "requirementId": "REQ-VIB-001",
+      "requirementVersion": "1.0.0",
+      "outcome": "FAIL",
+      "evidence": [
+        {
+          "kind": "signal-window",
+          "signalId": "vibration.x",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "vibration.y",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "vibration.z",
+          "t_start_seconds": 0,
+          "t_end_seconds": 7.9
+        },
+        {
+          "kind": "event",
+          "eventId": "events:vibration-excursion:vibration-excursion@1.000000#0"
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "vibration.x",
+          "t_start_seconds": 1,
+          "t_end_seconds": 2.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "vibration.y",
+          "t_start_seconds": 1,
+          "t_end_seconds": 2.9
+        },
+        {
+          "kind": "signal-window",
+          "signalId": "vibration.z",
+          "t_start_seconds": 1,
+          "t_end_seconds": 2.9
+        },
+        {
+          "kind": "measurement",
+          "signalId": "vibration.magnitude",
+          "t_seconds": 1,
+          "value": 43.30127018922193,
+          "unit": "m/s^2"
+        }
+      ],
+      "reason": "1 finding(s) from analysis:vibration-level exceeded its criterion over t=[0.000, 7.900]. The criterion is provisional and is not traceable to a flight-test document, so this FAIL states that a provisional criterion was exceeded — not that the aircraft breached a qualified limit.",
+      "evaluatedAtUtc": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "summary": {
+    "PASS": 1,
+    "FAIL": 3,
+    "INCONCLUSIVE": 0,
+    "NOT_APPLICABLE": 0
+  },
+  "evidenceRuleViolations": []
+}

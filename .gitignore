@@ -21,3 +21,6 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Vite build output for apps/web.
+apps/*/dist/

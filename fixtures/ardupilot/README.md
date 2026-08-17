@@ -5,6 +5,7 @@
 | `nominal.bin`           | Attitude, barometer and GPS over 2 s, with one mode change                   |
 | `gps-glitch.bin`        | A GPS fix loss with NaN speed samples, plus `VIBE` declared but never logged |
 | `mode-change-error.bin` | In-flight mode changes, a logged error, and a text message                   |
+| `degraded-flight.bin`   | Roll tracking excursion, extended GNSS outage and vibration excursion        |
 
 Each `.bin` is paired with four goldens, one per pipeline stage, all compared on every test run:
 
@@ -20,7 +21,13 @@ moves a PASS, FAIL, INCONCLUSIVE or NOT_APPLICABLE. The CLI golden is what a use
 receives — the same pipeline plus provenance, counts and the exit code — so a stage that stops being
 wired to the next shows up there even when each stage still passes its own golden.
 
-Two of its current outcomes are worth reading rather than skimming, because both are honest results
+`degraded-flight.bin` is the only fixture that trips the analysis rules. Until it existed, every rule
+stayed silent on every log, so nothing downstream of `packages/events` — findings, the investigation
+workflow, a requirement FAIL backed by a finding — had ever run against real fixture data. Its three
+faults are independent by construction, and pitch tracks correctly throughout, so a rule firing on
+pitch is a bug rather than a fixture property.
+
+Two of the other outcomes are worth reading rather than skimming, because both are honest results
 rather than bugs:
 
 - `gps-glitch` **passes** `REQ-GNSS-001`. The fixture's fix loss lasts 0.4 s and the provisional

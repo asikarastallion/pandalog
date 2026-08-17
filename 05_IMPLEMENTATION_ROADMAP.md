@@ -1,7 +1,7 @@
 # 05 — Implementation Roadmap
 
 Status: baseline, updated at the end of every milestone (see
-`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-G complete; H next.**
+`04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12). Current phase: **A-H complete; I next.**
 
 A milestone is complete only when: code exists, contracts exist (types + docs updated), tests
 exist and pass, `pnpm verify` passes, and documentation is current. Do not skip a foundational
@@ -221,7 +221,29 @@ Report output waits for Phase K, as this section permits.
 
 ---
 
-## Phase H — Web Investigation
+## Phase H — Web Investigation ✅ complete
+
+Verified 2026-08-17: `pnpm verify` green, 792 tests. The built bundle was additionally loaded in a
+real browser, `degraded-flight.bin` dropped into it, and the whole path — Worker, pipeline,
+findings, investigation, verification — confirmed end to end with an empty console.
+
+Two problems were found by building the app and fixed at the source rather than worked around:
+
+- **No fixture produced a `Finding`.** Every analysis rule stayed silent on the first three logs, so
+  nothing downstream of `packages/events` had run against real fixture data and this phase's
+  acceptance criterion had nothing to select. `degraded-flight.bin` was added: a roll tracking
+  excursion, a GNSS outage past the tolerance, and a vibration excursion, each tripping one rule and
+  no rule firing on the axis that tracks correctly.
+- **A `PipelineResult` cannot cross a Worker boundary.** `Signal.samples` is a Proxy over typed
+  arrays (doc 02 §4) and `structuredClone` rejects it — `DataCloneError`, confirmed rather than
+  assumed. Left unhandled, the failure mode is silent: signals arrive reporting zero samples and the
+  app renders blank plots for a log that parsed perfectly. The result now crosses as transferable
+  columns and is rebuilt with `createSignalFromColumns`, with a round-trip test over every sample,
+  validity and unit.
+
+Canonical → display unit conversion was added to `@pandalog/core-domain` (`toDisplayUnit`). Doc 04
+§1 rule 7 admits no exception for direction, so the radian-to-degree factor a plot needs lives in
+the unit table rather than in a component.
 
 **App:** `apps/web` — static SPA, no backend (doc 01 §2, ADR-0006). Logs are opened via
 drag-and-drop or the File System Access API and never leave the client.
