@@ -27,11 +27,16 @@ import {
   projectPolyline,
   type Camera,
 } from '../workspace/scene3d.js';
+import { modeFill } from '@pandalog/reporting';
+import type { ModeSegment } from '@pandalog/events';
+
+import { modeLegend, splitByMode } from '../workspace/mode-track.js';
 import { trajectoryAt, trajectoryPoints, type Trajectory } from '../workspace/trajectory.js';
 
 const props = defineProps<{
   trajectory: Trajectory | null;
   playback: PlaybackState | null;
+  modes: readonly ModeSegment[];
 }>();
 
 const WIDTH = 760;
@@ -61,12 +66,26 @@ const gridSegments = computed(() => {
     .sort(byDepth);
 });
 
-/** One polyline per flown run, so a break stays a break. */
+/**
+ * One polyline per flown run, cut again where the mode changed, so a break stays a break and a mode
+ * change is visible in three dimensions the same way it is on the map.
+ *
+ * The colour is `mode-track.ts`'s, which is `@pandalog/reporting`'s assignment — the same mode is
+ * the same colour here, on the ground track, and behind every Summary chart.
+ */
 const pathSegments = computed(() =>
-  (props.trajectory?.segments ?? [])
-    .flatMap((segment) => projectPolyline([...segment], camera.value, WIDTH, HEIGHT))
+  splitByMode(props.trajectory?.segments ?? [], props.modes)
+    .flatMap((piece) =>
+      projectPolyline([...piece.points], camera.value, WIDTH, HEIGHT).map((segment) => ({
+        ...segment,
+        stroke: piece.colorIndex < 0 ? null : modeFill(piece.colorIndex),
+        unrecorded: piece.mode === null,
+      })),
+    )
     .sort(byDepth),
 );
+
+const legend = computed(() => modeLegend(props.modes));
 
 /** Vertical drop lines to the ground plane — what makes height legible in a line drawing. */
 const dropLines = computed(() => {
@@ -225,6 +244,8 @@ const resetView = (): void => {
             :x2="segment.to.x"
             :y2="segment.to.y"
             class="path"
+            :class="{ unrecorded: segment.unrecorded }"
+            :stroke="segment.stroke ?? undefined"
           />
 
           <g v-if="vehicle" :transform="`translate(${vehicle.screen.x}, ${vehicle.screen.y})`">
@@ -248,6 +269,19 @@ const resetView = (): void => {
 
         <div class="hint">Drag to orbit · scroll to zoom</div>
         <button type="button" class="reset" @click="resetView">Reset view</button>
+
+        <ul v-if="legend.length > 0" class="mode-legend" aria-label="Flight modes">
+          <li v-for="entry in legend" :key="entry.label">
+            <span
+              class="mode-swatch"
+              :style="{
+                background: entry.colorIndex < 0 ? 'var(--fg-dim)' : modeFill(entry.colorIndex),
+              }"
+              aria-hidden="true"
+            />
+            {{ entry.label }}
+          </li>
+        </ul>
       </div>
 
       <div class="readout">
@@ -341,6 +375,36 @@ const resetView = (): void => {
   stroke-width: 2;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
+}
+
+/* A stretch the log stated no mode for: grey and dashed, so it does not read as another mode. */
+.path.unrecorded {
+  stroke: var(--fg-dim);
+  stroke-dasharray: 5 4;
+}
+
+.mode-legend {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  font-size: 0.7rem;
+  color: var(--fg-dim);
+}
+
+.mode-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mode-swatch {
+  width: 0.7rem;
+  height: 0.25rem;
+  border-radius: 1px;
+  display: inline-block;
 }
 
 .marker {

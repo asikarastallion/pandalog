@@ -106,7 +106,10 @@ const unavailable = computed(() => props.panels.filter((panel) => panel.chart ==
           :fill="fillFor(band.colorIndex)"
           :fill-opacity="band.inferred ? 0.06 : 0.14"
         >
-          <title>{{ band.label }} — {{ formatSeconds(band.startSeconds) }} to {{ formatSeconds(band.endSeconds) }}</title>
+          <title>
+            {{ band.label }} — {{ formatSeconds(band.startSeconds) }} to
+            {{ formatSeconds(band.endSeconds) }}
+          </title>
         </rect>
 
         <template v-for="(series, seriesIndex) in panel.chart?.series ?? []" :key="series.signalId">

@@ -28,12 +28,15 @@ import {
   TILE_SOURCE,
   type BasemapConsent,
 } from '../workspace/basemap.js';
+import type { ModeSegment } from '@pandalog/events';
+
 import type { PlaybackState } from '../workspace/playback.js';
 import { trackGeoBoundsDegrees, trackGeoSegments, type GroundTrack } from '../workspace/track.js';
 
 const props = defineProps<{
   track: GroundTrack | null;
   playback: PlaybackState | null;
+  modes: readonly ModeSegment[];
 }>();
 
 const consentStore = createConsentStore();
@@ -180,7 +183,7 @@ onBeforeUnmount(teardown);
     </div>
 
     <template v-else>
-      <GroundTrackMap v-if="track" :track="track" :playback="playback" />
+      <GroundTrackMap v-if="track" :track="track" :playback="playback" :modes="modes" />
       <p class="rationale">
         No tiles are being requested. The track is drawn to scale from the logged coordinates with
         its geographic bounds labelled — everything a ground track is read for except the terrain

@@ -120,10 +120,7 @@ export function browseFindings(
     entries: group.findings
       .map((finding) => byId.get(finding.id))
       .filter((entry): entry is FindingAtTime => entry !== undefined)
-      .sort(
-        (a, b) =>
-          a.startSeconds - b.startSeconds || a.finding.id.localeCompare(b.finding.id),
-      ),
+      .sort((a, b) => a.startSeconds - b.startSeconds || a.finding.id.localeCompare(b.finding.id)),
   }));
 
   const severities = new Set<Severity>();

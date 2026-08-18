@@ -19,6 +19,7 @@
 import { computed, readonly, shallowRef, type ComputedRef, type DeepReadonly, type Ref } from 'vue';
 
 import type { PipelineResult } from '@pandalog/pipeline';
+import { modeSegments, type ModeSegment } from '@pandalog/events';
 import { timeSpanOf, type TimeWindow } from '@pandalog/query';
 
 import { findingsByTime, openInvestigation, type Investigation } from './investigation.js';
@@ -55,6 +56,14 @@ export interface Workspace {
   readonly availableSignalIds: ComputedRef<readonly string[]>;
   /** The whole flight's extent, for placing an investigation against the full timeline. */
   readonly flightWindow: ComputedRef<TimeWindow | null>;
+  /**
+   * The modes the flight was flown in, as intervals.
+   *
+   * Computed once and shared, so the charts, the ground track, the 3D path and the timeline colour
+   * the same flight the same way — and agree about which boundaries the log never recorded
+   * (ADR-0016).
+   */
+  readonly modes: ComputedRef<readonly ModeSegment[]>;
 
   /** Playback clock. UI state (doc 01 §5) — the flight data it reads is not. */
   readonly playbackTime: Readonly<Ref<number>>;
@@ -136,6 +145,12 @@ export function createWorkspace(): Workspace {
       : null;
   });
 
+  const modes = computed<readonly ModeSegment[]>(() => {
+    const window = flightWindow.value;
+    const current = result.value;
+    return window === null || current === null ? [] : modeSegments(current.events, window);
+  });
+
   const playback = computed<PlaybackState | null>(() => {
     const current = result.value;
     return current === null ? null : playbackStateAt(current, playbackTime.value);
@@ -172,6 +187,7 @@ export function createWorkspace(): Workspace {
     investigation,
     availableSignalIds,
     flightWindow,
+    modes,
     playbackTime: readonly(playbackTime),
     isPlaying: readonly(isPlaying),
     playback,

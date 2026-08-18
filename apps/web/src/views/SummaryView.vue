@@ -11,6 +11,7 @@ import { computed } from 'vue';
 import EventTimeline from '../components/EventTimeline.vue';
 import FlightCharts from '../components/FlightCharts.vue';
 import FlightSummary from '../components/FlightSummary.vue';
+import type { ModeSegment } from '@pandalog/events';
 import type { PipelineResult } from '@pandalog/pipeline';
 import type { TimeWindow } from '@pandalog/query';
 import { flightCharts } from '../workspace/charts.js';
@@ -19,6 +20,7 @@ import type { ViewId } from '../workspace/navigation.js';
 const props = defineProps<{
   result: PipelineResult;
   flightWindow: TimeWindow | null;
+  modes: readonly ModeSegment[];
 }>();
 
 const emit = defineEmits<{ show: [view: ViewId] }>();
@@ -41,7 +43,7 @@ const CHART_SIZE = { width: 720, height: 110 };
 const charts = computed(() =>
   props.flightWindow === null
     ? []
-    : flightCharts(props.result.dataset, props.result.events, props.flightWindow, {
+    : flightCharts(props.result.dataset, props.modes, props.flightWindow, {
         size: CHART_SIZE,
       }),
 );
@@ -112,6 +114,7 @@ const severities = computed(() => {
         :events="result.events"
         :window="flightWindow"
         :highlight="null"
+        :modes="modes"
       />
       <p v-else class="none">This flight has no time extent to place events on.</p>
     </section>

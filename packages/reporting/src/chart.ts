@@ -160,6 +160,50 @@ export interface ChartBand {
 export const MODE_PALETTE_SIZE = 8;
 
 /**
+ * Which colour each mode gets, by order of first appearance.
+ *
+ * Exported because a chart is not the only thing that colours by mode — the ground track, the 3D
+ * path and the timeline strip do too, and a mode that is blue on the chart and orange on the map is
+ * worse than no colour at all. One assignment, shared, means all four agree for a given flight, and
+ * ordering by first appearance rather than by mode number makes it deterministic across runs.
+ */
+export function assignModeColors(segments: readonly ModeSegment[]): ReadonlyMap<number, number> {
+  const indexOfMode = new Map<number, number>();
+  for (const segment of segments) {
+    if (segment.mode !== null && !indexOfMode.has(segment.mode)) {
+      indexOfMode.set(segment.mode, indexOfMode.size % MODE_PALETTE_SIZE);
+    }
+  }
+  return indexOfMode;
+}
+
+/** The palette slot for a mode, or -1 for a period the log never stated a mode for. */
+export const modeColorIndex = (
+  assignment: ReadonlyMap<number, number>,
+  mode: number | null,
+): number => (mode === null ? -1 : (assignment.get(mode) ?? 0));
+
+/** What to call a mode. A number until the vehicle type is known — ADR-0016. */
+export const modeLabel = (mode: number | null): string =>
+  mode === null ? 'Mode not recorded' : `Mode ${String(mode)}`;
+
+/** The band and legend fills, indexed by the assignment above. Exported so every view matches. */
+export const MODE_FILL_COLORS: readonly string[] = Object.freeze([
+  '#4a9eff',
+  '#ff8f4a',
+  '#5fd08a',
+  '#d67cff',
+  '#ffd24a',
+  '#ff6b6b',
+  '#4adcd0',
+  '#a0a8b8',
+]);
+
+/** The fill for a palette slot, including the grey a not-recorded period gets. */
+export const modeFill = (colorIndex: number): string =>
+  colorIndex < 0 ? '#8a8a8a' : (MODE_FILL_COLORS[colorIndex] ?? '#8a8a8a');
+
+/**
  * Place mode segments on a chart's horizontal axis.
  *
  * The colour index is assigned by order of first appearance so it is stable for one flight and
@@ -171,12 +215,9 @@ export function buildModeBands(
   window: ChartWindow,
   width: number,
 ): readonly ChartBand[] {
-  const indexOfMode = new Map<number, number>();
+  const indexOfMode = assignModeColors(segments);
 
   return segments.map((segment) => {
-    if (segment.mode !== null && !indexOfMode.has(segment.mode)) {
-      indexOfMode.set(segment.mode, indexOfMode.size % MODE_PALETTE_SIZE);
-    }
     const x = timeToX(segment.startSeconds, window, width);
     const end = timeToX(segment.endSeconds, window, width);
 
@@ -186,8 +227,8 @@ export function buildModeBands(
       x,
       width: Math.max(0, end - x),
       mode: segment.mode,
-      label: segment.mode === null ? 'Mode not recorded' : `Mode ${String(segment.mode)}`,
-      colorIndex: segment.mode === null ? -1 : (indexOfMode.get(segment.mode) ?? 0),
+      label: modeLabel(segment.mode),
+      colorIndex: modeColorIndex(indexOfMode, segment.mode),
       inferred: !segment.startsAtLoggedChange || !segment.endsAtLoggedChange,
     };
   });
@@ -234,18 +275,6 @@ const SERIES_STROKES = Object.freeze([
   '#ff6b6b',
 ]);
 
-/** Mode band fills, indexed by `ChartBand.colorIndex`. Low alpha: a band is context, not content. */
-const MODE_FILLS = Object.freeze([
-  '#4a9eff',
-  '#ff8f4a',
-  '#5fd08a',
-  '#d67cff',
-  '#ffd24a',
-  '#ff6b6b',
-  '#4adcd0',
-  '#a0a8b8',
-]);
-
 const escapeXml = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -268,7 +297,7 @@ export function renderChartSvg(chart: Chart): string {
     if (band.width <= 0) {
       continue;
     }
-    const fill = band.colorIndex < 0 ? '#8a8a8a' : (MODE_FILLS[band.colorIndex] ?? '#8a8a8a');
+    const fill = modeFill(band.colorIndex);
     // An inferred boundary is drawn hatched rather than solid: the log did not record it, and a
     // solid edge would present an inference as a transition (ADR-0016).
     parts.push(

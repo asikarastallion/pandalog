@@ -195,7 +195,11 @@ const shortRule = (ruleId: string): string => ruleId.replace(/^analysis:/, '');
               :aria-current="entry.finding.id === selectedId ? 'true' : undefined"
               @click="emit('select', entry.finding.id)"
             >
-              <span v-if="view.group.count === 1" class="severity" :class="entry.finding.severity.toLowerCase()">
+              <span
+                v-if="view.group.count === 1"
+                class="severity"
+                :class="entry.finding.severity.toLowerCase()"
+              >
                 {{ entry.finding.severity }}
               </span>
               <span class="statement">{{ entry.finding.statement }}</span>

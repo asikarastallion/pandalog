@@ -232,6 +232,7 @@ const showsTransport = computed(
         v-if="workspace.activeView.value === 'summary'"
         :result="result"
         :flight-window="workspace.flightWindow.value"
+        :modes="workspace.modes.value"
         @show="workspace.showView"
       />
 
@@ -248,12 +249,14 @@ const showsTransport = computed(
         v-else-if="workspace.activeView.value === 'map'"
         :track="workspace.groundTrack.value"
         :playback="workspace.playback.value"
+        :modes="workspace.modes.value"
       />
 
       <PlaybackView
         v-else-if="workspace.activeView.value === 'playback'"
         :trajectory="workspace.trajectory.value"
         :playback="workspace.playback.value"
+        :modes="workspace.modes.value"
       />
 
       <InvestigationView

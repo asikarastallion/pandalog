@@ -10,10 +10,18 @@
  *
  * A break in the line is a stretch with no fix. Joining across it would draw a leg that was never
  * flown, and the longer the outage the more confident the invented leg would look.
+ *
+ * The path is coloured by flight mode, cut by `workspace/mode-track.ts` on real samples. Two
+ * properties survive that: the breaks are still breaks, and a stretch the log stated no mode for is
+ * drawn grey and dashed rather than taking the colour of the mode that followed it (ADR-0016).
  */
 import { computed } from 'vue';
 
+import { modeFill } from '@pandalog/reporting';
+import type { ModeSegment } from '@pandalog/events';
+
 import { formatCanonical } from '../workspace/format.js';
+import { modeLegend, splitByMode } from '../workspace/mode-track.js';
 import type { PlaybackState } from '../workspace/playback.js';
 import {
   projectOntoTrack,
@@ -25,22 +33,37 @@ import {
 const props = defineProps<{
   track: GroundTrack;
   playback: PlaybackState | null;
+  /** Empty means no mode information; the track then draws in one neutral colour. */
+  modes: readonly ModeSegment[];
 }>();
 
 const SIZE = 360;
 
 const viewport = computed(() => trackViewport(props.track, SIZE, SIZE));
 
+/**
+ * One polyline per mode within each fix-continuous run.
+ *
+ * Splitting by mode subdivides the runs `buildGroundTrack` already broke; it never merges two of
+ * them, so an outage stays an outage whatever the mode was doing across it.
+ */
 const polylines = computed(() =>
-  props.track.segments.map((segment) =>
-    segment
+  splitByMode(props.track.segments, props.modes).map((piece) => ({
+    points: piece.points
       .map(
         (point) =>
           `${viewport.value.toX(point.eastMeters).toFixed(2)},${viewport.value.toY(point.northMeters).toFixed(2)}`,
       )
       .join(' '),
-  ),
+    stroke: piece.colorIndex < 0 ? 'var(--fg-dim)' : modeFill(piece.colorIndex),
+    // A mode nothing recorded is dashed as well as grey: colour alone would read as just another
+    // mode, and this is the absence of one.
+    unrecorded: piece.mode === null,
+    label: piece.label,
+  })),
 );
+
+const legend = computed(() => modeLegend(props.modes));
 
 /** Where the vehicle is at the playback instant, or null while it has no fix. */
 const marker = computed(() => {
@@ -81,11 +104,15 @@ const degrees = (radians: number): string => formatCanonical(radians, 'rad', 5).
         aria-label="Ground track, north up"
       >
         <polyline
-          v-for="(points, index) in polylines"
+          v-for="(line, index) in polylines"
           :key="index"
-          :points="points"
+          :points="line.points"
           class="track"
-        />
+          :class="{ unrecorded: line.unrecorded }"
+          :stroke="line.stroke"
+        >
+          <title>{{ line.label }}</title>
+        </polyline>
         <circle v-if="marker" :cx="marker.x" :cy="marker.y" r="4" class="marker" />
         <g class="scale">
           <line
@@ -99,6 +126,20 @@ const degrees = (radians: number): string => formatCanonical(radians, 'rad', 5).
         </g>
         <text :x="SIZE - 10" y="16" class="compass">N ↑</text>
       </svg>
+
+      <ul v-if="legend.length > 0" class="legend" aria-label="Flight modes">
+        <li v-for="entry in legend" :key="entry.label">
+          <span
+            class="swatch"
+            :class="{ unrecorded: entry.mode === null }"
+            :style="{
+              background: entry.colorIndex < 0 ? 'var(--fg-dim)' : modeFill(entry.colorIndex),
+            }"
+            aria-hidden="true"
+          />
+          {{ entry.label }}
+        </li>
+      </ul>
 
       <p class="facts">
         <span v-if="track.gapCount > 0" class="gaps">
@@ -140,10 +181,42 @@ h2 {
 
 .track {
   fill: none;
-  stroke: var(--accent);
   stroke-width: 1.5;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+}
+
+.track.unrecorded {
+  stroke-dasharray: 4 3;
+}
+
+.legend {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  font-size: 0.7rem;
+  color: var(--fg-dim);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.swatch {
+  width: 0.7rem;
+  height: 0.25rem;
+  border-radius: 1px;
+  display: inline-block;
+}
+
+.swatch.unrecorded {
+  background-image: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 6px);
+  opacity: 0.6;
 }
 
 .marker {

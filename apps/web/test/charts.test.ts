@@ -13,6 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { mount } from '@vue/test-utils';
+import { modeSegments } from '@pandalog/events';
 import { runPipeline, type PipelineResult } from '@pandalog/pipeline';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -45,7 +46,8 @@ beforeAll(async () => {
   result = await load('degraded-flight.bin');
 });
 
-const panels = () => flightCharts(result.dataset, result.events, WINDOW, { size: SIZE });
+const modes = () => modeSegments(result.events, WINDOW);
+const panels = () => flightCharts(result.dataset, modes(), WINDOW, { size: SIZE });
 
 describe('the panels a flight produces', () => {
   it('returns one panel per definition, present or not', () => {
@@ -127,8 +129,7 @@ describe('mode bands', () => {
     }
   });
 
-  it('bands from the same segments the report and the ground track use', async () => {
-    const { modeSegments } = await import('@pandalog/events');
+  it('bands from the same segments the report and the ground track use', () => {
     const bands = panels().find((panel) => panel.chart !== null)?.chart?.bands ?? [];
 
     expect(bands.map((band) => [band.startSeconds, band.endSeconds])).toEqual(
@@ -201,7 +202,7 @@ describe('the charts reach the screen', () => {
 
   it('appears on the Summary view itself', () => {
     const wrapper = mount(SummaryView, {
-      props: { result, flightWindow: WINDOW },
+      props: { result, flightWindow: WINDOW, modes: modes() },
     });
 
     expect(wrapper.findComponent(FlightCharts).exists()).toBe(true);
@@ -210,7 +211,7 @@ describe('the charts reach the screen', () => {
 
   it('renders nothing rather than an empty frame when the flight has no extent', () => {
     const wrapper = mount(SummaryView, {
-      props: { result, flightWindow: null },
+      props: { result, flightWindow: null, modes: [] },
     });
 
     expect(wrapper.findComponent(FlightCharts).exists()).toBe(false);

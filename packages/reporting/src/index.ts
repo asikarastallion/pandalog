@@ -29,10 +29,15 @@ export { groupFindings, isRepeated } from './rollup.js';
 export type { FindingGroup, GroupPeak } from './rollup.js';
 
 export {
+  assignModeColors,
   buildChart,
   buildChartSeries,
   buildModeBands,
+  MODE_FILL_COLORS,
   MODE_PALETTE_SIZE,
+  modeColorIndex,
+  modeFill,
+  modeLabel,
   pointsAttribute,
   renderChartSvg,
   timeToX,

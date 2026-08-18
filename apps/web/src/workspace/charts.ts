@@ -16,7 +16,7 @@
  * "this view does not show voltage", and the reader cannot tell which they are looking at — the
  * same reason `notApplicableRuleIds` is printed rather than filtered away (doc 03 §3).
  */
-import { modeSegments, type ModeSegment } from '@pandalog/events';
+import type { ModeSegment } from '@pandalog/events';
 import { buildChart, type Chart } from '@pandalog/reporting';
 import type { TimeWindow } from '@pandalog/query';
 import type { CanonicalFlightDataset, Signal } from '@pandalog/schema';
@@ -117,25 +117,16 @@ function resolve(
 /**
  * Build every panel for a flight.
  *
- * Mode bands come from the same `modeSegments` the report and the ground track use, so all three
- * agree about where a mode began and ended — including about which boundaries the log never
- * recorded (ADR-0016).
+ * `modes` is the workspace's single set of intervals, so the charts, the ground track, the 3D path
+ * and the timeline agree about where a mode began and ended — including about which boundaries the
+ * log never recorded (ADR-0016).
  */
 export function flightCharts(
   dataset: CanonicalFlightDataset,
-  events: readonly {
-    readonly type: string;
-    readonly t_start_seconds: number;
-    readonly id: string;
-  }[],
+  modes: readonly ModeSegment[],
   window: TimeWindow,
   options: FlightChartsOptions,
 ): readonly ChartPanel[] {
-  const modes: readonly ModeSegment[] = modeSegments(
-    events as Parameters<typeof modeSegments>[0],
-    window,
-  );
-
   return CHART_PANELS.map((definition) => {
     const preferred = resolve(dataset, definition.signalIds);
     const useFallback =
