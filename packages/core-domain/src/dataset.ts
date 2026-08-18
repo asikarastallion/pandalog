@@ -24,6 +24,7 @@ import {
 } from '@pandalog/schema';
 
 import { InvalidDatasetError } from './errors.js';
+import { getSignalColumns } from './signal.js';
 
 export interface CreateCanonicalFlightDatasetInput {
   readonly provenance: SourceProvenance;
@@ -92,4 +93,44 @@ export function createCanonicalFlightDataset(
     signals,
     sourceEvents,
   });
+}
+
+export interface DatasetTimeSpan {
+  readonly startSeconds: number;
+  readonly endSeconds: number;
+}
+
+/**
+ * The extent of a dataset on its own time axis — the earliest and latest sample any signal carries.
+ *
+ * Selection, not calculation: both numbers are timestamps the log recorded. It lives here rather
+ * than in a consumer because three of them need it (the workspace, to place a finding against the
+ * whole flight; `@pandalog/reporting`, to bound the last mode interval; anything charting a flight)
+ * and three implementations of "when did this flight start" would eventually disagree.
+ *
+ * Returns null when no signal carries a sample. Null rather than a zero-width window at the origin:
+ * a flight with no time extent is not a flight that happened at t = 0.
+ */
+export function datasetTimeSpan(dataset: CanonicalFlightDataset): DatasetTimeSpan | null {
+  let start = Number.POSITIVE_INFINITY;
+  let end = Number.NEGATIVE_INFINITY;
+
+  for (const signal of dataset.signals.values()) {
+    const columns = getSignalColumns(signal);
+    const length = columns?.t.length ?? signal.samples.length;
+    if (length === 0) {
+      continue;
+    }
+    const first = columns?.t[0] ?? signal.samples[0]?.t_rel_seconds;
+    const last = columns?.t[length - 1] ?? signal.samples[length - 1]?.t_rel_seconds;
+    if (first === undefined || last === undefined) {
+      continue;
+    }
+    start = Math.min(start, first);
+    end = Math.max(end, last);
+  }
+
+  return Number.isFinite(start) && Number.isFinite(end)
+    ? { startSeconds: start, endSeconds: end }
+    : null;
 }

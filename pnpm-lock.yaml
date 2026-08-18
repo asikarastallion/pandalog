@@ -252,6 +252,12 @@ importers:
       '@pandalog/comparison':
         specifier: workspace:*
         version: link:../comparison
+      '@pandalog/core-domain':
+        specifier: workspace:*
+        version: link:../core-domain
+      '@pandalog/events':
+        specifier: workspace:*
+        version: link:../events
       '@pandalog/schema':
         specifier: workspace:*
         version: link:../schema

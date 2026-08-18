@@ -9,9 +9,11 @@
 import { computed } from 'vue';
 
 import EventTimeline from '../components/EventTimeline.vue';
+import FlightCharts from '../components/FlightCharts.vue';
 import FlightSummary from '../components/FlightSummary.vue';
 import type { PipelineResult } from '@pandalog/pipeline';
 import type { TimeWindow } from '@pandalog/query';
+import { flightCharts } from '../workspace/charts.js';
 import type { ViewId } from '../workspace/navigation.js';
 
 const props = defineProps<{
@@ -30,6 +32,20 @@ const outcomes = computed(() => [
   { label: 'NOT_APPLICABLE', count: summary.value.NOT_APPLICABLE, tone: 'na' },
 ]);
 
+/**
+ * Chart width in user units. The SVG scales to its container; this only fixes the coordinate space
+ * the geometry is laid out in, so the aspect ratio is stable across panels.
+ */
+const CHART_SIZE = { width: 720, height: 110 };
+
+const charts = computed(() =>
+  props.flightWindow === null
+    ? []
+    : flightCharts(props.result.dataset, props.result.events, props.flightWindow, {
+        size: CHART_SIZE,
+      }),
+);
+
 const severities = computed(() => {
   const counts = new Map<string, number>();
   for (const finding of props.result.findings) {
@@ -42,6 +58,17 @@ const severities = computed(() => {
 <template>
   <div class="summary-view">
     <FlightSummary :result="result" />
+
+    <!--
+      The flight before the verdict. "What did it do" is the question a log is opened with, and it
+      was previously answerable only by leaving this view.
+    -->
+    <FlightCharts
+      v-if="flightWindow && charts.length > 0"
+      :panels="charts"
+      :window="flightWindow"
+      :size="CHART_SIZE"
+    />
 
     <section class="headline" aria-labelledby="verdict-heading">
       <h3 id="verdict-heading">Verification</h3>

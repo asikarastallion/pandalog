@@ -26,6 +26,9 @@ export {
   SOURCE_LOG_DETECTORS,
 } from './detectors/source-log.js';
 
+export { MODE_CHANGE_EVENT_TYPE, modeSegments, modesIn } from './segments.js';
+export type { ModeSegment, ModeSegmentWindow } from './segments.js';
+
 export {
   createGpsFixLossDetector,
   DEFAULT_MIN_FIX_LOSS_SECONDS,

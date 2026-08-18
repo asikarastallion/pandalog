@@ -34,6 +34,14 @@ Findings: 0 (CRITICAL 0, WARNING 0, ADVISORY 0, INFO 0)
 
 Verification against `pandalog-provisional` version `1.0.0`, source `provisional`: PASS 3, FAIL 0, INCONCLUSIVE 0, NOT_APPLICABLE 1.
 
+## Flight modes
+
+| Mode | Interval | Began at | Ended at |
+| --- | --- | --- | --- |
+| 5 | t = 0 s to 1.9 s | logged change | end of data |
+
+A mode is shown as the number the log recorded. The same number means different modes on different airframes — 5 is LOITER on a multirotor and FBWA on a fixed wing — and this log does not identify the airframe, so naming it would be a guess (ADR-0016). A boundary shown as `start of data` or `end of data` is where the recording began or ended, not a transition the aircraft made.
+
 ## Findings
 
 This flight raised no findings. That is not a statement that nothing was wrong — it means no registered rule found a condition it was written to detect.

@@ -17,6 +17,7 @@
  */
 import type { Finding, Hypothesis, RuleExecution, Severity } from '@pandalog/analysis';
 import type { ComparisonReport, ComparisonTolerance } from '@pandalog/comparison';
+import type { FlightEvent } from '@pandalog/events';
 import type { CanonicalFlightDataset, SourceProvenance, Vehicle } from '@pandalog/schema';
 import type {
   RequirementSource,
@@ -61,6 +62,22 @@ export interface ReportDocument {
   readonly counts: ReportCounts;
   readonly findings: readonly Finding[];
   readonly hypotheses: readonly Hypothesis[];
+  /**
+   * The events the flight produced, embedded unchanged (ADR-0016).
+   *
+   * A report without them cannot say what mode the aircraft was in when a finding fired, which is
+   * among the first things a reader asks of a finding's time window. They are facts, not judgements
+   * (doc 03 §1), and nothing here interprets them.
+   */
+  readonly events: readonly FlightEvent[];
+  /**
+   * The flight's extent on its own time axis, or null when no signal carries a sample.
+   *
+   * Selected from the dataset by `datasetTimeSpan`, so the last mode interval can be bounded by
+   * where the recording stopped rather than by the last transition — which is not the same instant
+   * (ADR-0016).
+   */
+  readonly timeSpan: { readonly startSeconds: number; readonly endSeconds: number } | null;
   /** Rules that did not apply to this flight — silent, which is not the same as passing. */
   readonly notApplicableRuleIds: readonly string[];
   readonly verification: VerificationReport;
@@ -72,6 +89,8 @@ export interface ReportInput {
   readonly dataset: CanonicalFlightDataset;
   readonly findings: readonly Finding[];
   readonly hypotheses: readonly Hypothesis[];
+  /** Optional so an existing caller keeps working; absent means "none carried", not "none occurred". */
+  readonly events?: readonly FlightEvent[];
   readonly notApplicableRuleIds: readonly string[];
   readonly executedRules: readonly RuleExecution[];
   readonly verification: VerificationReport;

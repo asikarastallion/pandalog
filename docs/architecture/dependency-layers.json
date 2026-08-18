@@ -137,10 +137,11 @@
       "layer": 10,
       "package": "@pandalog/reporting",
       "path": "packages/reporting",
-      "responsibility": "Renders structured analysis/verification/comparison artifacts into reproducible report documents. Performs no calculation.",
+      "responsibility": "Renders structured analysis/verification/comparison artifacts, and the flight's events, into reproducible report documents. Performs no calculation. Depends on events because a report that cannot say what mode the aircraft was in cannot place a finding in the flight (ADR-0016).",
       "allowedDependencies": [
         "@pandalog/schema",
         "@pandalog/core-domain",
+        "@pandalog/events",
         "@pandalog/analysis",
         "@pandalog/verification",
         "@pandalog/comparison"

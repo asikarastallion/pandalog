@@ -7,6 +7,7 @@
  * beyond `+= 1`, and that is not an accident of the current implementation but the point of it.
  */
 import type { Finding, Severity } from '@pandalog/analysis';
+import { datasetTimeSpan } from '@pandalog/core-domain';
 
 import {
   REPORTING_VERSION,
@@ -87,6 +88,8 @@ export function buildReport(input: ReportInput): ReportDocument {
     counts,
     findings: input.findings,
     hypotheses: input.hypotheses,
+    events: input.events ?? [],
+    timeSpan: datasetTimeSpan(input.dataset),
     notApplicableRuleIds: input.notApplicableRuleIds,
     verification: input.verification,
     comparison: input.comparison ?? null,

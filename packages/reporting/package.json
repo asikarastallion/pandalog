@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Renders structured analysis/verification/comparison artifacts into reproducible report documents. Performs no calculation. Layer 10, platform neutral.",
+  "description": "Renders structured analysis/verification/comparison artifacts, and the flight's events, into reproducible report documents. Performs no calculation. Layer 10, platform neutral.",
   "license": "UNLICENSED",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -20,6 +20,8 @@
   "dependencies": {
     "@pandalog/analysis": "workspace:*",
     "@pandalog/comparison": "workspace:*",
+    "@pandalog/core-domain": "workspace:*",
+    "@pandalog/events": "workspace:*",
     "@pandalog/schema": "workspace:*",
     "@pandalog/verification": "workspace:*"
   }

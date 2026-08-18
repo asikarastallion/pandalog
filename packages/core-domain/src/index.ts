@@ -45,5 +45,5 @@ export type { SignalColumns } from './sample-view.js';
 export { createSignal, createSignalFromColumns, getSignalColumns } from './signal.js';
 export type { CreateSignalFromColumnsInput, CreateSignalInput } from './signal.js';
 
-export { createCanonicalFlightDataset } from './dataset.js';
-export type { CreateCanonicalFlightDatasetInput } from './dataset.js';
+export { createCanonicalFlightDataset, datasetTimeSpan } from './dataset.js';
+export type { CreateCanonicalFlightDatasetInput, DatasetTimeSpan } from './dataset.js';

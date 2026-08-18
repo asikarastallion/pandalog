@@ -5,6 +5,8 @@
   "include": ["src/**/*.ts"],
   "references": [
     { "path": "../schema" },
+    { "path": "../core-domain" },
+    { "path": "../events" },
     { "path": "../analysis" },
     { "path": "../verification" },
     { "path": "../comparison" }

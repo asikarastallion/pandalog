@@ -19,6 +19,7 @@ import {
   type ThresholdRecord,
 } from '@pandalog/analysis';
 import type { ComparisonReport, ComparisonVerdict } from '@pandalog/comparison';
+import { modeSegments, type ModeSegment } from '@pandalog/events';
 import type { VerificationResult } from '@pandalog/verification';
 
 import type { ReportDocument } from './document.js';
@@ -196,6 +197,40 @@ function renderGroupIndex(groups: readonly FindingGroup[]): string {
   );
 }
 
+/**
+ * The modes the aircraft flew in, as intervals.
+ *
+ * A reader placing a finding in the flight asks what mode it was in, and until now the report could
+ * not answer. The intervals are `@pandalog/events`' (`modeSegments`) — the same ones the app colours
+ * a ground track with, so the document and the screen cannot disagree about where a mode ended.
+ *
+ * Two honesty requirements, both from ADR-0016. A period the log never stated a mode for is printed
+ * as "not recorded" rather than back-filled from the next record; and a mode is printed as its
+ * *number*, because 5 is LOITER on a copter and FBWA on a plane and the frame class is often not
+ * logged. Naming it from a guess would be wrong in a way the reader could not detect.
+ */
+function renderModes(segments: readonly ModeSegment[]): string {
+  const rows = segments.map((segment) => [
+    segment.mode === null ? 'not recorded' : formatNumber(segment.mode),
+    formatWindow(segment.startSeconds, segment.endSeconds),
+    segment.startsAtLoggedChange ? 'logged change' : 'start of data',
+    segment.endsAtLoggedChange ? 'logged change' : 'end of data',
+  ]);
+
+  return (
+    table(
+      ['Mode', 'Interval', 'Began at', 'Ended at'],
+      rows,
+      'This log carries no mode records, so the flight cannot be divided into modes.',
+    ) +
+    '\n\nA mode is shown as the number the log recorded. The same number means different modes on ' +
+    'different airframes — 5 is LOITER on a multirotor and FBWA on a fixed wing — and this log ' +
+    'does not identify the airframe, so naming it would be a guess (ADR-0016). A boundary shown as ' +
+    '`start of data` or `end of data` is where the recording began or ended, not a transition the ' +
+    'aircraft made.'
+  );
+}
+
 function renderHypothesis(hypothesis: Hypothesis): string {
   const lines = [
     `### ${hypothesis.status} — ${hypothesis.statement}`,
@@ -347,6 +382,13 @@ export function renderMarkdown(document: ReportDocument): string {
           `INCONCLUSIVE ${formatNumber(counts.outcomes.INCONCLUSIVE)}, ` +
           `NOT_APPLICABLE ${formatNumber(counts.outcomes.NOT_APPLICABLE)}.`,
       ].join('\n'),
+    ),
+
+    section(
+      'Flight modes',
+      renderModes(
+        document.timeSpan === null ? [] : modeSegments(document.events, document.timeSpan),
+      ),
     ),
 
     section(

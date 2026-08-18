@@ -28,4 +28,24 @@ export type {
 export { groupFindings, isRepeated } from './rollup.js';
 export type { FindingGroup, GroupPeak } from './rollup.js';
 
+export {
+  buildChart,
+  buildChartSeries,
+  buildModeBands,
+  MODE_PALETTE_SIZE,
+  pointsAttribute,
+  renderChartSvg,
+  timeToX,
+} from './chart.js';
+export type {
+  BuildChartInput,
+  Chart,
+  ChartBand,
+  ChartPoint,
+  ChartSeries,
+  ChartSeriesOptions,
+  ChartSize,
+  ChartWindow,
+} from './chart.js';
+
 export { renderMarkdown } from './markdown.js';

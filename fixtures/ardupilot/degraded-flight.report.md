@@ -34,6 +34,14 @@ Findings: 3 (CRITICAL 0, WARNING 3, ADVISORY 0, INFO 0)
 
 Verification against `pandalog-provisional` version `1.0.0`, source `provisional`: PASS 1, FAIL 3, INCONCLUSIVE 0, NOT_APPLICABLE 0.
 
+## Flight modes
+
+| Mode | Interval | Began at | Ended at |
+| --- | --- | --- | --- |
+| 5 | t = 0 s to 7.9 s | logged change | end of data |
+
+A mode is shown as the number the log recorded. The same number means different modes on different airframes — 5 is LOITER on a multirotor and FBWA on a fixed wing — and this log does not identify the airframe, so naming it would be a guess (ADR-0016). A boundary shown as `start of data` or `end of data` is where the recording began or ended, not a transition the aircraft made.
+
 ## Findings
 
 | Rule | Severity | Signals | Occurrences | Span | Largest recorded |
