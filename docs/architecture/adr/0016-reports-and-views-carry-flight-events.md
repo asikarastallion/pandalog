@@ -34,28 +34,28 @@ unchanged — events is layer 5, reporting is layer 10 — and reporting already
 transitively through `@pandalog/analysis`. What changes is that the edge is now declared and used
 directly.
 
-This does not widen what reporting may *do*. Doc 04 §7 still holds: reporting renders and computes
+This does not widen what reporting may _do_. Doc 04 §7 still holds: reporting renders and computes
 nothing, and events are one more artifact it embeds verbatim rather than a new source of numbers it
 may derive from.
 
 ### 2. Mode intervals are derived in `@pandalog/events`, not in each consumer
 
 A log records mode changes as instants (`MODE` records). Every consumer that wants to colour a
-track, band a chart or list a mode log needs the same thing: the *interval* each mode was active
+track, band a chart or list a mode log needs the same thing: the _interval_ each mode was active
 over. Three consumers deriving that separately is three chances to disagree about where a mode
 ended, so it is derived once, in the package that owns events.
 
 ### 3. An interval's unlogged boundaries are named, never assumed
 
 This is the part that constrains the design, and it follows a precedent already in this package.
-`ARM_DISARM_DETECTOR` deliberately refuses to pair arm and disarm into an armed *interval*:
+`ARM_DISARM_DETECTOR` deliberately refuses to pair arm and disarm into an armed _interval_:
 
 > a log can begin or end mid-flight: pairing them into an interval would require inventing a
 > boundary the log does not contain.
 
 Mode intervals have exactly that problem at both ends:
 
-- **Before the first `MODE` record**, the aircraft was in *some* mode and the log does not say
+- **Before the first `MODE` record**, the aircraft was in _some_ mode and the log does not say
   which. That period is represented with a `null` mode, not back-filled from the first record.
 - **After the last `MODE` record**, the mode continued until the log stopped. That segment's end is
   the end of data, which is not a logged transition.
@@ -106,7 +106,7 @@ doc 04 §11 says code-says-A/docs-say-B is not an acceptable interim state. `app
 `@pandalog/comparison`.
 
 The dependency direction is unchanged — comparison is layer 9, `apps/web` is layer 11 — and
-`apps/web` already reached the package's *types* transitively through `@pandalog/reporting`, which
+`apps/web` already reached the package's _types_ transitively through `@pandalog/reporting`, which
 embeds a `ComparisonReport`. What changes is that the app may now call `compareFlights`.
 
 **No new capability is introduced by the view.** `compareFlights` is the same deterministic function

@@ -120,7 +120,11 @@ async function analyse(fileName: string, bytes: ArrayBuffer, remember: boolean):
     // The buffer is transferred to the Worker, so a copy is kept for storage first.
     const forStorage = remember ? bytes.slice(0) : null;
 
-    const result = await pipeline().analyse(fileName, bytes);
+    const result = await pipeline().analyse(fileName, bytes, {
+      onStage: (stage) => {
+        workspace.reportStage(stage);
+      },
+    });
     // A verdict about the previous flight must not survive into this one.
     comparison.value = { status: 'idle' };
     workspace.setResult(fileName, result);

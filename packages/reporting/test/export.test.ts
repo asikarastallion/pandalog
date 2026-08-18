@@ -109,7 +109,9 @@ describe('findings as CSV', () => {
 
   it('names every severity and rule the findings carry, and invents none', async () => {
     const input = await inputFor('degraded-flight.bin');
-    const rows = lines(renderFindingsCsv(buildReport(input))).slice(1).map(parseLine);
+    const rows = lines(renderFindingsCsv(buildReport(input)))
+      .slice(1)
+      .map(parseLine);
     const ruleIds = new Set(input.findings.map((finding) => finding.ruleId));
 
     for (const row of rows) {
@@ -159,9 +161,14 @@ describe('the HTML report', () => {
       return renderHtml(document);
     }
     return renderHtml(document, {
-      panels: flightCharts(input.dataset, modeSegments(document.events, document.timeSpan), document.timeSpan, {
-        size: { width: 720, height: 110 },
-      }),
+      panels: flightCharts(
+        input.dataset,
+        modeSegments(document.events, document.timeSpan),
+        document.timeSpan,
+        {
+          size: { width: 720, height: 110 },
+        },
+      ),
     });
   };
 

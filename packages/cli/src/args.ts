@@ -14,13 +14,7 @@
  * reproducible report a human archives (doc 04 §7). Both come from the same run, so a step that
  * produces one and a step that produces the other cannot disagree about the flight.
  */
-export const OUTPUT_FORMATS = [
-  'json',
-  'markdown',
-  'html',
-  'csv',
-  'csv-verification',
-] as const;
+export const OUTPUT_FORMATS = ['json', 'markdown', 'html', 'csv', 'csv-verification'] as const;
 
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
 

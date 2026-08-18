@@ -13,6 +13,7 @@
 import { ref } from 'vue';
 
 import type { LoadState } from '../workspace/state.js';
+import { isStageDone, STAGES, STAGE_COUNT, STAGE_LABELS, stageIndex } from '../workspace/stages.js';
 
 defineProps<{ state: LoadState }>();
 const emit = defineEmits<{ open: [file: File] }>();
@@ -48,7 +49,31 @@ function onPick(event: Event): void {
   >
     <template v-if="state.status === 'loading'">
       <p class="headline">Analysing {{ state.fileName }}…</p>
-      <p class="detail">Decoding, detecting events, running rules and verifying requirements.</p>
+
+      <!--
+        A list of the real stages with the current one marked, rather than a progress bar. Every
+        stage shown is a stage that runs; the one in progress is stated, and the ones after it are
+        not pretended to be partially done.
+      -->
+      <ol class="stages" aria-live="polite">
+        <li
+          v-for="stage in STAGES"
+          :key="stage"
+          :class="{
+            done: isStageDone(stage, state.stage),
+            current: state.stage === stage,
+          }"
+          :aria-current="state.stage === stage ? 'step' : undefined"
+        >
+          {{ STAGE_LABELS[stage] }}
+        </li>
+      </ol>
+
+      <p class="detail">
+        <span v-if="state.stage === null">Starting…</span>
+        <span v-else>Stage {{ stageIndex(state.stage) }} of {{ STAGE_COUNT }}</span>
+        · runs in a Worker, so the tab stays responsive. Nothing is uploaded.
+      </p>
     </template>
 
     <template v-else>
@@ -80,6 +105,50 @@ function onPick(event: Event): void {
 </template>
 
 <style scoped>
+.stages {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  text-align: left;
+  max-width: 24rem;
+  margin-inline: auto;
+}
+
+.stages li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--fg-dim);
+  opacity: 0.55;
+}
+
+.stages li::before {
+  content: '○';
+  font-size: 0.7rem;
+}
+
+.stages li.done {
+  opacity: 0.8;
+}
+
+.stages li.done::before {
+  content: '●';
+  color: var(--pass);
+}
+
+.stages li.current {
+  opacity: 1;
+  color: var(--fg);
+}
+
+.stages li.current::before {
+  content: '◐';
+  color: var(--accent);
+}
+
 .dropzone {
   border: 1px dashed var(--border-strong);
   border-radius: 4px;

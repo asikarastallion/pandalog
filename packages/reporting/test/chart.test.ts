@@ -96,13 +96,7 @@ describe('absent data is absent', () => {
   it('breaks the line across a run that was not recorded', () => {
     // Drawing through this would render the dropout as a smooth glide (doc 04 §1 rule 6).
     const series = buildChartSeries(
-      signalOf([
-        sample(0, 1),
-        sample(1, 2),
-        absent(2),
-        absent(3),
-        sample(4, 3),
-      ]),
+      signalOf([sample(0, 1), sample(1, 2), absent(2), absent(3), sample(4, 3)]),
       WINDOW,
       SIZE,
     );

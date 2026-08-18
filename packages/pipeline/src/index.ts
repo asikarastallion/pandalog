@@ -7,5 +7,5 @@
  * one place rather than in each caller.
  */
 
-export { runPipeline } from './pipeline.js';
-export type { PipelineInput, PipelineResult } from './pipeline.js';
+export { PIPELINE_STAGES, runPipeline } from './pipeline.js';
+export type { PipelineInput, PipelineResult, PipelineStage } from './pipeline.js';

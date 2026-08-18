@@ -28,19 +28,20 @@ and the code in the same commit (doc 01 §6).
 
 ## ADRs
 
-| ADR                                                        | Decision                                                         |
-| ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| [ADR-0005](adr/0005-package-boundaries.md)                 | Why the package graph is split the way it is                     |
-| [ADR-0006](adr/0006-no-backend.md)                         | No backend: static client-side app plus a Node CLI               |
-| [ADR-0007](adr/0007-validity-value-bearing-split.md)       | Validity invariant split into value-bearing / non-value-bearing  |
-| [ADR-0008](adr/0008-layer-numbers-follow-dependencies.md)  | Layer numbers express dependency direction, not roadmap order    |
-| [ADR-0009](adr/0009-dataflash-binary-only.md)              | Phase B decodes binary .BIN only; text .log is out of scope      |
-| [ADR-0010](adr/0010-shared-pipeline-package.md)            | One shared pipeline package, so CLI and browser cannot disagree  |
-| [ADR-0011](adr/0011-local-plane-projection.md)             | Local tangent-plane projection; the basemap is opt-in            |
-| [ADR-0012](adr/0012-comparison-verdict-contract.md)        | Comparison has three verdicts; an unexamined axis is never SAME  |
-| [ADR-0013](adr/0013-reports-embed-artifacts-verbatim.md)   | Reports embed artifacts verbatim and render canonical units only |
-| [ADR-0014](adr/0014-ai-answers-are-grounded-at-runtime.md) | AI answers are grounded at runtime, not only constrained by type |
-| [ADR-0015](adr/0015-phase-i-partial-completion.md)         | Phase I was marked complete while a deliverable was partial      |
+| ADR                                                           | Decision                                                         |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [ADR-0005](adr/0005-package-boundaries.md)                    | Why the package graph is split the way it is                     |
+| [ADR-0006](adr/0006-no-backend.md)                            | No backend: static client-side app plus a Node CLI               |
+| [ADR-0007](adr/0007-validity-value-bearing-split.md)          | Validity invariant split into value-bearing / non-value-bearing  |
+| [ADR-0008](adr/0008-layer-numbers-follow-dependencies.md)     | Layer numbers express dependency direction, not roadmap order    |
+| [ADR-0009](adr/0009-dataflash-binary-only.md)                 | Phase B decodes binary .BIN only; text .log is out of scope      |
+| [ADR-0010](adr/0010-shared-pipeline-package.md)               | One shared pipeline package, so CLI and browser cannot disagree  |
+| [ADR-0011](adr/0011-local-plane-projection.md)                | Local tangent-plane projection; the basemap is opt-in            |
+| [ADR-0012](adr/0012-comparison-verdict-contract.md)           | Comparison has three verdicts; an unexamined axis is never SAME  |
+| [ADR-0013](adr/0013-reports-embed-artifacts-verbatim.md)      | Reports embed artifacts verbatim and render canonical units only |
+| [ADR-0014](adr/0014-ai-answers-are-grounded-at-runtime.md)    | AI answers are grounded at runtime, not only constrained by type |
+| [ADR-0015](adr/0015-phase-i-partial-completion.md)            | Phase I was marked complete while a deliverable was partial      |
+| [ADR-0016](adr/0016-reports-and-views-carry-flight-events.md) | Reports carry events; mode intervals name their unlogged edges   |
 
 ADR numbering starts at 0005 because doc 01 §2 and §4 already cite those identifiers; earlier
 numbers are reserved for the decisions recorded directly in documents 01-05.

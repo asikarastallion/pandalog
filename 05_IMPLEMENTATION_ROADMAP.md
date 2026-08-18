@@ -412,11 +412,78 @@ investigation/verification/reporting flows building and passing tests unchanged.
 
 ---
 
+## Presentation pass — 2026-08-18
+
+Not a new phase: no package was introduced, no analysis rule was added, and nothing here changes
+what the pipeline concludes about a flight. It is recorded because it changed two documented
+contracts and closed a gap the roadmap had not noticed.
+
+Verified 2026-08-18: `pnpm verify` green, 82 test files, 1442 tests (from 71/1241).
+
+**The problem.** A real 43-finding log produced a 1295-line report in which one rule restated one
+sentence twenty-odd times, and a 43-row flat list on screen. The analysis was right and unreadable,
+which is not a smaller failure than being wrong: an unread finding and an absent finding inform an
+engineer equally.
+
+**What changed.**
+
+- **Finding rollup** (`@pandalog/reporting`'s `rollup.ts`), shared by the report and the screen so
+  the two group identically. It is additive — every group carries every original `Finding`,
+  unaltered — and it states only tallies and selections. There is deliberately **no total**: a
+  summed exceedance duration is a quantity no `Finding` asserts, so if it is ever wanted it belongs
+  in a rule in `@pandalog/analysis` that can carry evidence for it. `rollup.test.ts` holds that line
+  with an invented-total control.
+- **Charts** (`chart.ts`, `panels.ts`), used by both the Summary view and the HTML report.
+  `no-calculation.test.ts` cannot see an SVG, so the traceability guarantee is restated in terms a
+  chart can be held to: every plotted point is a value-bearing sample, absent data breaks the line,
+  and a moved sample moves the chart.
+- **Flight-mode colouring** across the 2D track, 3D playback, timeline and chart bands, from one
+  shared colour assignment.
+- **HTML, PDF, CSV and JSON exports**, all from the same `buildReport` document.
+- **Comparison and Log info views**, and a grouped navigation rail.
+- **Staged load progress**, reported as named stages rather than a percentage.
+
+**Two contract changes, both in ADR-0016.** `@pandalog/reporting` may depend on `@pandalog/events`,
+because a report that cannot say what mode the aircraft was in cannot place a finding in the flight;
+and `apps/web` may depend on `@pandalog/comparison`.
+
+**A gap this document should have caught.** `@pandalog/comparison` was delivered complete in Phase J
+and was reachable from nowhere — no view, no CLI command, and absent from both `apps/web`'s and the
+CLI's `allowedDependencies` — while `dependency-layers.json` described `apps/web` as providing a
+comparison view. Phase J's acceptance criterion is a self-consistency property of the package, which
+it met; nothing asked whether anything could call it. **A phase that delivers a package an
+application is meant to use is not complete until something calls it**, and that is now a
+cross-phase rule below.
+
+**Two defects found, both invisible where they were introduced.** `@pandalog/reporting`'s
+`tsconfig.json` referenced neither `core-domain` nor `events` while importing both: typecheck and
+test passed, and only `tsc -b` failed, because the first two resolve through a `dist` that exists on
+any machine that has built before. That is the bug class `web-resolution.test.ts` was written for,
+one level down, so `package-resolution.test.ts` now checks every package's tsconfig references
+against its `package.json` and against the dependency manifest — and immediately found the second
+defect, `reporting` using `core-domain` without declaring it.
+
+**Not built, and why.** No FFT or PID-tuning view. The canonical model carries IMU signals but no
+frequency transform, and `packages/parser-ardupilot`'s catalogue has no PID term at all — no
+`PIDR`/`PIDP`/`PIDY` mapping. Either would be a permanently empty screen claiming a capability that
+does not exist. Both are real future increments: FFT needs a transform in `@pandalog/query`, PID
+tuning needs parser coverage first.
+
+**A fixture limitation, stated rather than worked around.** No committed log carries both mode
+changes and position, so mode colouring is tested against a real flown path with constructed mode
+changes, and against a real mode-changing log with no path. A fixture carrying both would close it.
+
+---
+
 ## Cross-phase rules
 
 - A phase's package cannot be started until every package in `docs/architecture/
 dependency-layers.json` with a lower `introducedInPhase` exists and is tested — the manifest
   is the source of truth for "is the previous phase actually done," not this document's prose.
+- **A phase that delivers a package an application is meant to use is not complete until something
+  calls it.** `@pandalog/comparison` was complete, tested to 97% coverage, and reachable from
+  nowhere for two phases, while the manifest described `apps/web` as providing the view it fed. A
+  package's own acceptance criterion cannot notice that; only this rule can.
 - Every phase ends with the Phase Completion Routine in
   `04_CLAUDE_CODE_ENGINEERING_CONTRACT.md` §12 (full validation, architecture review, fixture
   verification, roadmap status update in this document, coherent commits).

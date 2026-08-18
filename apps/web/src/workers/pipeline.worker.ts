@@ -35,6 +35,14 @@ scope.addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
         fileName: request.fileName,
         bytes: new Uint8Array(request.bytes),
         now: () => new Date(),
+        onStage: (stage) => {
+          const progress: WorkerResponse = {
+            kind: 'progress',
+            requestId: request.requestId,
+            stage,
+          };
+          scope.postMessage(progress);
+        },
       });
 
       const payload = encodeResult(result);

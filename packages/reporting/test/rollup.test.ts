@@ -55,9 +55,27 @@ function excursion(options: {
 }
 
 const pitchExcursions = [
-  excursion({ index: 0, signalId: 'attitude.pitch', peak: 0.21, startSeconds: 10, durationSeconds: 2.5 }),
-  excursion({ index: 1, signalId: 'attitude.pitch', peak: 0.341, startSeconds: 40, durationSeconds: 4 }),
-  excursion({ index: 2, signalId: 'attitude.pitch', peak: 0.18, startSeconds: 90, durationSeconds: 1.25 }),
+  excursion({
+    index: 0,
+    signalId: 'attitude.pitch',
+    peak: 0.21,
+    startSeconds: 10,
+    durationSeconds: 2.5,
+  }),
+  excursion({
+    index: 1,
+    signalId: 'attitude.pitch',
+    peak: 0.341,
+    startSeconds: 40,
+    durationSeconds: 4,
+  }),
+  excursion({
+    index: 2,
+    signalId: 'attitude.pitch',
+    peak: 0.18,
+    startSeconds: 90,
+    durationSeconds: 1.25,
+  }),
 ];
 
 const rollExcursion = excursion({
@@ -134,7 +152,9 @@ describe('a group states only what a finding already asserted', () => {
     expect(peak?.unit).toBe('rad');
     // Traceability: the number is one evidenced claim's, and the group says which.
     expect(peak?.findingId).toBe('finding:attitude.pitch:1');
-    expect(pitchExcursions.flatMap((f) => f.measurements.map((m) => m.value))).toContain(peak?.value);
+    expect(pitchExcursions.flatMap((f) => f.measurements.map((m) => m.value))).toContain(
+      peak?.value,
+    );
   });
 
   it('never compares two units as if they were one quantity', () => {

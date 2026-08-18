@@ -34,6 +34,17 @@ import {
   type VerificationReport,
 } from '@pandalog/verification';
 
+/**
+ * The deterministic stages, in the order they run.
+ *
+ * Named rather than numbered, and reported as *stages* rather than as a percentage: the work each
+ * stage does depends on what the log contains, so any percentage would be a number this package
+ * invented about its own progress. A stage name is a fact — that stage has started.
+ */
+export const PIPELINE_STAGES = ['ingesting', 'detecting-events', 'analysing', 'verifying'] as const;
+
+export type PipelineStage = (typeof PIPELINE_STAGES)[number];
+
 export interface PipelineInput {
   readonly fileName: string;
   readonly bytes: Uint8Array;
@@ -47,6 +58,15 @@ export interface PipelineInput {
   readonly now: () => Date;
   /** Requirements to verify against. Defaults to the provisional set (doc 05 Phase F). */
   readonly requirementSet?: RequirementSet;
+  /**
+   * Called as each stage begins, so a caller can say what is happening during a long decode.
+   *
+   * Observation only: it cannot alter what the pipeline computes, and a run with no listener
+   * produces exactly the same result as one with a listener. A throwing listener is not caught —
+   * a caller that breaks its own progress display should hear about it rather than have the
+   * analysis swallow it (doc 04 §4).
+   */
+  readonly onStage?: (stage: PipelineStage) => void;
 }
 
 export interface PipelineResult {
@@ -81,14 +101,23 @@ const rules = createDefaultRuleRegistry();
  * decides how to present a failure, which for the CLI means an exit code rather than a stack trace.
  */
 export async function runPipeline(input: PipelineInput): Promise<PipelineResult> {
+  const stage = (name: PipelineStage): void => {
+    input.onStage?.(name);
+  };
+
+  stage('ingesting');
   const dataset = await ingest(
     { fileName: input.fileName, bytes: input.bytes },
     { registry: adapters, now: input.now },
   );
 
+  stage('detecting-events');
   const events = detectEvents(detectors, { dataset });
+
+  stage('analysing');
   const analysis = runAnalysis(rules, { dataset, events, now: input.now });
 
+  stage('verifying');
   const verification = verifyRequirements(input.requirementSet ?? PROVISIONAL_REQUIREMENT_SET_V1, {
     dataset,
     events,

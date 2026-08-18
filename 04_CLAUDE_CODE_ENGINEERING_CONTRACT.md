@@ -87,12 +87,29 @@ rules so they exist once, not duplicated between the two.
 ## 7. Reporting
 
 - `packages/reporting` renders structured artifacts (`Finding[]`, `VerificationResult[]`,
-  comparison output); it performs no calculation of its own. If a number appears in a report
-  that isn't traceable to `analysis`/`verification`/`comparison` output, that's a boundary
-  violation.
+  `FlightEvent[]`, comparison output); it performs no calculation of its own. If a number appears
+  in a report that isn't traceable to `analysis`/`verification`/`comparison` output, that's a
+  boundary violation.
+- **Two operations are rendering, a third is not.** *Tallying* the list being printed and
+  *selecting* a value out of it (a maximum, an earliest, a latest) are rendering: the number
+  printed is a number an artifact already contains. *Arithmetic over* them — a sum, a mean, a rate —
+  produces a quantity nothing asserts and nothing evidences. A grouped view stating "24
+  occurrences, peak 0.341 rad" is inside the line; the same view adding "totalling 87.3 s" is
+  outside it, and the total belongs in a rule in `packages/analysis` that can carry evidence for
+  it. Checked by `packages/reporting/test/no-calculation.test.ts` and `rollup.test.ts`.
+- **A chart is held to the same rule in different terms.** A rendered SVG is thousands of
+  coordinates, none of which is a measurement, so the numeric corpus check cannot see it. The
+  equivalent guarantees are: every plotted point corresponds to a value-bearing sample, a
+  non-value-bearing run breaks the line rather than being drawn through (§1 rule 6 in pixels), and
+  moving one sample moves the output. Checked by `packages/reporting/test/chart.test.ts`.
 - Every report embeds provenance: source SHA-256, schema version, parser version, analysis
   version, rule-set version, configuration used. Two runs against the same inputs and versions
   must produce the same report content.
+- **A rendered form that cannot be reproduced must say so in its own body.** The Markdown, HTML,
+  CSV and JSON exports are byte-reproducible; a PDF printed from the HTML is not, because page
+  size, margins and font rasterisation belong to the browser that printed it. Stating that in a
+  commit message or an ADR is not sufficient — the person who over-trusts the artifact is reading
+  the artifact.
 
 ## 8. Security
 

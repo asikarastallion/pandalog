@@ -8,7 +8,7 @@
  */
 import { decodeResult } from './transfer.js';
 import type { WorkerRequest, WorkerResponse } from './protocol.js';
-import type { PipelineResult } from '@pandalog/pipeline';
+import type { PipelineResult, PipelineStage } from '@pandalog/pipeline';
 
 export class PipelineFailure extends Error {
   readonly code: string | null;
@@ -20,8 +20,13 @@ export class PipelineFailure extends Error {
   }
 }
 
+export interface AnalyseOptions {
+  /** Called as each pipeline stage begins, so a long decode can say what it is doing. */
+  readonly onStage?: (stage: PipelineStage) => void;
+}
+
 export interface PipelineClient {
-  analyse(fileName: string, bytes: ArrayBuffer): Promise<PipelineResult>;
+  analyse(fileName: string, bytes: ArrayBuffer, options?: AnalyseOptions): Promise<PipelineResult>;
   dispose(): void;
 }
 
@@ -36,6 +41,7 @@ export interface WorkerLike {
 interface Pending {
   readonly resolve: (result: PipelineResult) => void;
   readonly reject: (error: Error) => void;
+  readonly onStage: ((stage: PipelineStage) => void) | undefined;
 }
 
 export function createPipelineClient(worker: WorkerLike): PipelineClient {
@@ -50,6 +56,15 @@ export function createPipelineClient(worker: WorkerLike): PipelineClient {
       // correct handling, not an oversight.
       return;
     }
+
+    if (response.kind === 'progress') {
+      // Progress does not settle the request, so the entry stays. A stale load's progress is
+      // dropped by the same check above, which is what stops an older decode from relabelling the
+      // status of a newer one.
+      waiting.onStage?.(response.stage);
+      return;
+    }
+
     pending.delete(response.requestId);
 
     if (response.kind === 'error') {
@@ -85,12 +100,16 @@ export function createPipelineClient(worker: WorkerLike): PipelineClient {
   });
 
   return {
-    analyse(fileName: string, bytes: ArrayBuffer): Promise<PipelineResult> {
+    analyse(
+      fileName: string,
+      bytes: ArrayBuffer,
+      options: AnalyseOptions = {},
+    ): Promise<PipelineResult> {
       const requestId = nextRequestId;
       nextRequestId += 1;
 
       return new Promise<PipelineResult>((resolve, reject) => {
-        pending.set(requestId, { resolve, reject });
+        pending.set(requestId, { resolve, reject, onStage: options.onStage });
         worker.postMessage({ kind: 'analyse', requestId, fileName, bytes }, [bytes]);
       });
     },

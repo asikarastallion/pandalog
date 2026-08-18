@@ -7,6 +7,8 @@
  * a user who drops a second log while the first is still parsing must not see the first log's
  * findings labelled with the second log's name.
  */
+import type { PipelineStage } from '@pandalog/pipeline';
+
 import type { TransferableResult } from './transfer.js';
 
 export interface AnalyseRequest {
@@ -20,6 +22,12 @@ export interface AnalyseRequest {
 export type WorkerRequest = AnalyseRequest;
 
 export type WorkerResponse =
+  /**
+   * A stage has begun. Sent as a stage name and never as a percentage: how long each stage takes
+   * depends on what the log contains, so a percentage would be a number invented about the run
+   * rather than measured from it.
+   */
+  | { readonly kind: 'progress'; readonly requestId: number; readonly stage: PipelineStage }
   | { readonly kind: 'ok'; readonly requestId: number; readonly result: TransferableResult }
   | {
       readonly kind: 'error';

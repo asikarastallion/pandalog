@@ -18,7 +18,7 @@
  */
 import { computed, readonly, shallowRef, type ComputedRef, type DeepReadonly, type Ref } from 'vue';
 
-import type { PipelineResult } from '@pandalog/pipeline';
+import type { PipelineResult, PipelineStage } from '@pandalog/pipeline';
 import { modeSegments, type ModeSegment } from '@pandalog/events';
 import { timeSpanOf, type TimeWindow } from '@pandalog/query';
 
@@ -34,7 +34,18 @@ const CONTEXT_PADDING_SECONDS = 1;
 
 export type LoadState =
   | { readonly status: 'empty' }
-  | { readonly status: 'loading'; readonly fileName: string }
+  | {
+      readonly status: 'loading';
+      readonly fileName: string;
+      /**
+       * The stage the pipeline is in, or null before the first one reports.
+       *
+       * A stage, never a percentage. How long each stage takes depends on what the log contains,
+       * so a progress bar would be an invented number about the run rather than a measured one —
+       * and a bar that sits at 80% for a minute is worse than a label that says what is happening.
+       */
+      readonly stage: PipelineStage | null;
+    }
   | { readonly status: 'ready'; readonly fileName: string }
   | {
       readonly status: 'failed';
@@ -81,6 +92,8 @@ export interface Workspace {
   readonly activeView: Readonly<Ref<ViewId>>;
 
   beginLoad(fileName: string): void;
+  /** Report which stage the open load has reached. Ignored unless a load is in flight. */
+  reportStage(stage: PipelineStage): void;
   setResult(fileName: string, result: PipelineResult): void;
   /** Takes the thrown value, not a string: the error's `code` is what selects the guidance. */
   failLoad(fileName: string, thrown: unknown): void;
@@ -196,13 +209,21 @@ export function createWorkspace(): Workspace {
     activeView: readonly(activeView),
 
     beginLoad(fileName: string): void {
-      load.value = { status: 'loading', fileName };
+      load.value = { status: 'loading', fileName, stage: null };
       activeView.value = DEFAULT_VIEW;
       result.value = null;
       selectedFindingId.value = null;
       extraSignalIds.value = [];
       playbackTime.value = 0;
       isPlaying.value = false;
+    },
+
+    reportStage(stage: PipelineStage): void {
+      // Only while a load is in flight. A stage arriving after the result — a superseded run's
+      // message — must not put a finished workspace back into a loading state.
+      if (load.value.status === 'loading') {
+        load.value = { ...load.value, stage };
+      }
     },
 
     setResult(fileName: string, next: PipelineResult): void {

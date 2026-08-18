@@ -55,45 +55,42 @@ describe('the packages exist to be checked', () => {
   });
 });
 
-describe.each(packages.map((entry) => [entry.package, entry] as const))(
-  '%s',
-  (_name, entry) => {
-    const root = path.join(REPO_ROOT, entry.path);
-    const declared = workspaceDeps(
-      JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as PackageManifest,
+describe.each(packages.map((entry) => [entry.package, entry] as const))('%s', (_name, entry) => {
+  const root = path.join(REPO_ROOT, entry.path);
+  const declared = workspaceDeps(
+    JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as PackageManifest,
+  );
+  const referenced = (readTsConfig(path.join(root, 'tsconfig.json')).references ?? [])
+    .map((reference) => path.basename(reference.path))
+    .sort();
+
+  it('references every workspace dependency it declares', () => {
+    // Missing here means `tsc -b` cannot see the package, which typecheck and test will not
+    // notice — they resolve through node_modules to a dist that may already exist.
+    expect(
+      declared.filter((dependency) => !referenced.includes(dependency)),
+      `${entry.package} depends on these but its tsconfig references none of them`,
+    ).toEqual([]);
+  });
+
+  it('declares every workspace package it references', () => {
+    expect(
+      referenced.filter((reference) => !declared.includes(reference)),
+      `${entry.package} references these but its package.json declares none of them`,
+    ).toEqual([]);
+  });
+
+  it('declares nothing the dependency manifest does not allow', () => {
+    const allowed = new Set(
+      entry.allowedDependencies.map((dependency) => dependency.replace('@pandalog/', '')),
     );
-    const referenced = (readTsConfig(path.join(root, 'tsconfig.json')).references ?? [])
-      .map((reference) => path.basename(reference.path))
-      .sort();
 
-    it('references every workspace dependency it declares', () => {
-      // Missing here means `tsc -b` cannot see the package, which typecheck and test will not
-      // notice — they resolve through node_modules to a dist that may already exist.
-      expect(
-        declared.filter((dependency) => !referenced.includes(dependency)),
-        `${entry.package} depends on these but its tsconfig references none of them`,
-      ).toEqual([]);
-    });
-
-    it('declares every workspace package it references', () => {
-      expect(
-        referenced.filter((reference) => !declared.includes(reference)),
-        `${entry.package} references these but its package.json declares none of them`,
-      ).toEqual([]);
-    });
-
-    it('declares nothing the dependency manifest does not allow', () => {
-      const allowed = new Set(
-        entry.allowedDependencies.map((dependency) => dependency.replace('@pandalog/', '')),
-      );
-
-      expect(
-        declared.filter((dependency) => !allowed.has(dependency)),
-        `${entry.package} declares a dependency dependency-layers.json does not permit`,
-      ).toEqual([]);
-    });
-  },
-);
+    expect(
+      declared.filter((dependency) => !allowed.has(dependency)),
+      `${entry.package} declares a dependency dependency-layers.json does not permit`,
+    ).toEqual([]);
+  });
+});
 
 describe('the check can fail', () => {
   // Doc 05 requires an architecture check to be shown failing rather than asserted to work.

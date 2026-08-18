@@ -48,7 +48,10 @@ let nominal: PipelineResult;
 let degraded: PipelineResult;
 
 beforeAll(async () => {
-  [nominal, degraded] = await Promise.all([run('nominal.bin', bytesOf('nominal.bin')), run('degraded-flight.bin', bytesOf('degraded-flight.bin'))]);
+  [nominal, degraded] = await Promise.all([
+    run('nominal.bin', bytesOf('nominal.bin')),
+    run('degraded-flight.bin', bytesOf('degraded-flight.bin')),
+  ]);
 });
 
 const summary = (sha256: string, fileName: string): StoredLogSummary => ({
