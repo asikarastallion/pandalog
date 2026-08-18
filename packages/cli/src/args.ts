@@ -14,7 +14,13 @@
  * reproducible report a human archives (doc 04 §7). Both come from the same run, so a step that
  * produces one and a step that produces the other cannot disagree about the flight.
  */
-export const OUTPUT_FORMATS = ['json', 'markdown'] as const;
+export const OUTPUT_FORMATS = [
+  'json',
+  'markdown',
+  'html',
+  'csv',
+  'csv-verification',
+] as const;
 
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
 
@@ -106,7 +112,7 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
 export const USAGE = `pandalog — flight data verification
 
 Usage:
-  pandalog verify <log.bin> [--quiet] [--format=json|markdown]
+  pandalog verify <log.bin> [--quiet] [--format=json|markdown|html|csv|csv-verification]
   pandalog --help
   pandalog --version
 
@@ -121,6 +127,15 @@ Options:
   --format=markdown   A reproducible report, provenance-stamped. Two runs over
                       the same log and versions produce byte-identical output
                       apart from the generation timestamp.
+  --format=html       The same report as a standalone printable page, with the
+                      signal charts markdown cannot carry. Reproducible in the
+                      same sense as markdown; a PDF printed from it is not, as
+                      the page says.
+  --format=csv        Every finding, one row per evidence reference, at full
+                      precision. For a spreadsheet, not for reading.
+  --format=csv-verification
+                      Every requirement outcome, one row per evidence
+                      reference. A result citing no evidence still gets a row.
   -h, --help          Show this help.
   --version           Print the version.
 

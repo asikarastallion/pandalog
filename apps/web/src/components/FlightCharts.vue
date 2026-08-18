@@ -2,9 +2,10 @@
 /**
  * The flight, drawn — what an engineer looks at before reading a word.
  *
- * Every curve here is `@pandalog/reporting`'s geometry, reached through `workspace/charts.ts`; the
- * component computes nothing (doc 04 §1 rule 1). What it decides is layout and what to say about a
- * panel the log cannot support.
+ * Every curve here is `@pandalog/reporting`'s — both the geometry and the choice of which signals
+ * make a panel, so a chart seen here is the same chart the exported report carries. The component
+ * computes nothing (doc 04 §1 rule 1); it decides layout, and what to say about a panel the log
+ * cannot support.
  *
  * Two things are drawn as facts rather than as decoration:
  *
@@ -17,9 +18,8 @@
  */
 import { computed } from 'vue';
 
-import { pointsAttribute } from '@pandalog/reporting';
+import { pointsAttribute, type ChartPanel } from '@pandalog/reporting';
 
-import type { ChartPanel } from '../workspace/charts.js';
 import { formatNumber, formatSeconds } from '../workspace/format.js';
 
 const props = defineProps<{

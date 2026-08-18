@@ -17,8 +17,16 @@
 import { parseArgs, USAGE, type VerifyCommand } from './args.js';
 import { EXIT, exitCodeFor, type ExitCode } from './exit-codes.js';
 import { buildDocument, summarise } from './output.js';
-import { runPipeline } from '@pandalog/pipeline';
-import { buildReport, renderMarkdown } from '@pandalog/reporting';
+import { runPipeline, type PipelineResult } from '@pandalog/pipeline';
+import {
+  buildReport,
+  flightCharts,
+  renderFindingsCsv,
+  renderHtml,
+  renderMarkdown,
+  renderVerificationCsv,
+} from '@pandalog/reporting';
+import { modeSegments } from '@pandalog/events';
 
 /** The package version, asserted against `package.json` by a test so the two cannot drift. */
 export const CLI_VERSION = '0.1.0';
@@ -54,15 +62,10 @@ async function verify(command: VerifyCommand, environment: CliEnvironment): Prom
 
   const exitCode = exitCodeFor(result.verification.summary);
 
-  // Both formats are rendered from the same run, so the archived report and the machine-readable
-  // document cannot disagree about the flight (doc 04 §7).
-  if (command.format === 'markdown') {
-    environment.stdout(renderMarkdown(buildReport({ ...result, now: environment.now })));
-  } else {
-    environment.stdout(
-      `${JSON.stringify(buildDocument({ version: CLI_VERSION, result, exitCode }), null, 2)}\n`,
-    );
-  }
+  // Every format is rendered from the same run and the same document, so the archived report, the
+  // printable page, the spreadsheet and the machine-readable JSON cannot disagree about the flight
+  // (doc 04 §7).
+  environment.stdout(render(command.format, result, environment.now, exitCode));
 
   if (!command.quiet) {
     environment.stderr(
@@ -83,6 +86,54 @@ async function verify(command: VerifyCommand, environment: CliEnvironment): Prom
  *
  * @returns the process exit code. See `exit-codes.ts` for what each one promises.
  */
+/**
+ * Chart size for the printable report, in user units.
+ *
+ * The SVG scales to the page; this fixes the coordinate space so the aspect ratio is the same on
+ * every panel and in every run — a report whose charts changed shape between runs would not be
+ * reproducible in the way doc 04 §7 requires.
+ */
+const REPORT_CHART_SIZE = Object.freeze({ width: 720, height: 110 });
+
+/**
+ * One run, rendered into whichever form was asked for.
+ *
+ * Every branch starts from the same `ReportDocument`, so the archived report, the printable page,
+ * the spreadsheet and the machine-readable JSON cannot disagree about the flight (doc 04 §7). The
+ * switch is exhaustive over `OutputFormat`; adding a format without handling it fails to compile.
+ */
+function render(
+  format: VerifyCommand['format'],
+  result: PipelineResult,
+  now: () => Date,
+  exitCode: ExitCode,
+): string {
+  const document = buildReport({ ...result, now });
+
+  switch (format) {
+    case 'markdown':
+      return renderMarkdown(document);
+    case 'csv':
+      return renderFindingsCsv(document);
+    case 'csv-verification':
+      return renderVerificationCsv(document);
+    case 'html':
+      return renderHtml(document, {
+        panels:
+          document.timeSpan === null
+            ? []
+            : flightCharts(
+                result.dataset,
+                modeSegments(document.events, document.timeSpan),
+                document.timeSpan,
+                { size: REPORT_CHART_SIZE },
+              ),
+      });
+    case 'json':
+      return `${JSON.stringify(buildDocument({ version: CLI_VERSION, result, exitCode }), null, 2)}\n`;
+  }
+}
+
 export async function runCli(environment: CliEnvironment): Promise<ExitCode> {
   const parsed = parseArgs(environment.argv);
 

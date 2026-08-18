@@ -11,6 +11,7 @@
   "references": [
     { "path": "../schema" },
     { "path": "../analysis" },
+    { "path": "../events" },
     { "path": "../verification" },
     { "path": "../pipeline" },
     { "path": "../reporting" }

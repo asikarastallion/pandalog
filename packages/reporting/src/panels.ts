@@ -1,15 +1,9 @@
 /**
- * The charts a Summary shows, and what to say when a log cannot support one.
+ * Which charts describe a flight, and what to say when a log cannot support one.
  *
- * Summary previously answered "what did the analysis conclude" with four counts and a timeline. It
- * could not answer "what did the flight *do*", which is the question an engineer opens a log with,
- * and answering it in prose is answering it slowly — the shape of an altitude profile is read at a
- * glance and described in a paragraph.
- *
- * Geometry is `@pandalog/reporting`'s `buildChart`, which is also what the report draws with, so a
- * curve on screen and the same curve in the document are the same computation. What lives here is
- * the *selection*: which signals make a panel, and what a panel says when the log does not carry
- * them.
+ * `chart.ts` lays a signal out; this decides *which* signals are worth laying out. Both the Summary
+ * view and the HTML report ask that question and must get the same answer — a chart an engineer saw
+ * on screen and cannot find in the document is a chart they will assume they misread.
  *
  * **An unavailable panel is shown, not hidden.** A log with no battery telemetry gets a battery
  * panel saying so. Dropping it would make "this aircraft logged no voltage" indistinguishable from
@@ -17,9 +11,9 @@
  * same reason `notApplicableRuleIds` is printed rather than filtered away (doc 03 §3).
  */
 import type { ModeSegment } from '@pandalog/events';
-import { buildChart, type Chart } from '@pandalog/reporting';
-import type { TimeWindow } from '@pandalog/query';
 import type { CanonicalFlightDataset, Signal } from '@pandalog/schema';
+
+import { buildChart, type Chart, type ChartWindow } from './chart.js';
 
 export interface ChartPanelDefinition {
   readonly id: string;
@@ -95,6 +89,11 @@ export interface ChartPanel {
 
 export interface FlightChartsOptions {
   readonly size: { readonly width: number; readonly height: number };
+  /**
+   * Convert to display units. On for a screen, off for a filed report — `format.ts` explains why a
+   * report stays in canonical units, and a chart's axis labels are numbers like any other.
+   */
+  readonly displayUnits?: boolean;
 }
 
 function resolve(
@@ -124,7 +123,7 @@ function resolve(
 export function flightCharts(
   dataset: CanonicalFlightDataset,
   modes: readonly ModeSegment[],
-  window: TimeWindow,
+  window: ChartWindow,
   options: FlightChartsOptions,
 ): readonly ChartPanel[] {
   return CHART_PANELS.map((definition) => {
@@ -157,9 +156,7 @@ export function flightCharts(
         window,
         size: options.size,
         modes,
-        // A screen is read and discarded, so it converts; a filed report does not (see
-        // `packages/reporting/src/format.ts`).
-        displayUnits: true,
+        displayUnits: options.displayUnits ?? false,
       }),
       signalIds: chosen.present.map((signal) => signal.id),
       missingSignalIds: chosen.missing,

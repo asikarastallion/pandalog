@@ -13,8 +13,9 @@ import FlightCharts from '../components/FlightCharts.vue';
 import FlightSummary from '../components/FlightSummary.vue';
 import type { ModeSegment } from '@pandalog/events';
 import type { PipelineResult } from '@pandalog/pipeline';
+import { flightCharts } from '@pandalog/reporting';
 import type { TimeWindow } from '@pandalog/query';
-import { flightCharts } from '../workspace/charts.js';
+
 import type { ViewId } from '../workspace/navigation.js';
 
 const props = defineProps<{

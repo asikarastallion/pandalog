@@ -22,6 +22,7 @@
   ],
   "dependencies": {
     "@pandalog/analysis": "workspace:*",
+    "@pandalog/events": "workspace:*",
     "@pandalog/pipeline": "workspace:*",
     "@pandalog/reporting": "workspace:*",
     "@pandalog/schema": "workspace:*",

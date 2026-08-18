@@ -135,6 +135,9 @@ importers:
       '@pandalog/analysis':
         specifier: workspace:*
         version: link:../analysis
+      '@pandalog/events':
+        specifier: workspace:*
+        version: link:../events
       '@pandalog/pipeline':
         specifier: workspace:*
         version: link:../pipeline

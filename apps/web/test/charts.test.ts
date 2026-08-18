@@ -19,7 +19,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import FlightCharts from '../src/components/FlightCharts.vue';
 import SummaryView from '../src/views/SummaryView.vue';
-import { CHART_PANELS, flightCharts } from '../src/workspace/charts.js';
+import { CHART_PANELS, flightCharts } from '@pandalog/reporting';
 
 const FIXTURES = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

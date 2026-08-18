@@ -179,8 +179,8 @@ describe('the timeline', () => {
 
 describe('one colour per mode, across every view', () => {
   it('agrees between the map, the 3D path, the timeline and the charts', async () => {
-    const { buildModeBands, modeFill } = await import('@pandalog/reporting');
-    const { flightCharts } = await import('../src/workspace/charts.js');
+    const { buildModeBands, flightCharts, modeFill } = await import('@pandalog/reporting');
+
 
     // The charts' assignment is the reference — every view derives from assignModeColors.
     const chartColours = new Map(

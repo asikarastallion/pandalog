@@ -53,4 +53,12 @@ export type {
   ChartWindow,
 } from './chart.js';
 
+export { flightCharts, CHART_PANELS } from './panels.js';
+export type { ChartPanel, ChartPanelDefinition, FlightChartsOptions } from './panels.js';
+
+export { csvCell, renderFindingsCsv, renderVerificationCsv } from './csv.js';
+
+export { renderHtml } from './html.js';
+export type { RenderHtmlOptions } from './html.js';
+
 export { renderMarkdown } from './markdown.js';
