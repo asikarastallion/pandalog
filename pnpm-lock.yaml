@@ -68,6 +68,9 @@ importers:
       '@pandalog/analysis':
         specifier: workspace:*
         version: link:../../packages/analysis
+      '@pandalog/comparison':
+        specifier: workspace:*
+        version: link:../../packages/comparison
       '@pandalog/core-domain':
         specifier: workspace:*
         version: link:../../packages/core-domain
