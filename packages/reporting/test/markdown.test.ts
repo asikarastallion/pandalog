@@ -5,7 +5,7 @@
  * needs no dependency to produce. What is tested here is not layout but the handful of things a
  * renderer can quietly get wrong in a way that changes what the report *asserts*.
  */
-import type { Finding } from '@pandalog/analysis';
+import { createFinding, type Finding } from '@pandalog/analysis';
 import { describe, expect, it } from 'vitest';
 
 import { buildReport, renderMarkdown } from '@pandalog/reporting';
@@ -223,5 +223,126 @@ describe('rendering a comparison', () => {
     const markdown = await render('nominal.bin');
 
     expect(markdown).not.toMatch(/^## Comparison/m);
+  });
+});
+
+/**
+ * The report the grouping exists for.
+ *
+ * A real log put 43 findings through this renderer, of which twenty-odd were one rule restating one
+ * sentence with different numbers, and the result was 1295 lines of prose nobody reads. These
+ * assertions are about that report, not the three-finding fixture: they build the repetition
+ * deliberately, because a fixture that never repeats cannot show whether the fix works.
+ */
+describe('a rule that fired many times', () => {
+  const repeated = (index: number, peak: number, start: number, duration: number): Finding =>
+    createFinding({
+      id: `finding:pitch:${String(index)}`,
+      ruleId: 'analysis:attitude-tracking-error',
+      ruleVersion: '1.0.0',
+      statement: `Pitch tracking exceeded the configured criterion for ${String(duration)} s.`,
+      severity: 'WARNING',
+      evidence: [
+        {
+          kind: 'signal-window',
+          signalId: 'attitude.pitch',
+          t_start_seconds: start,
+          t_end_seconds: start + duration,
+        },
+      ],
+      measurements: [{ label: 'Peak RMS tracking error', value: peak, unit: 'rad' }],
+      thresholds: [
+        { label: 'RMS tracking error criterion', value: 0.0873, unit: 'rad', basis: 'provisional' },
+      ],
+      producedAtUtc: '2026-01-01T00:00:00.000Z',
+    });
+
+  const twentyFour = Array.from({ length: 24 }, (_unused, index) =>
+    repeated(index, 0.1 + index / 100, index * 30, 1 + (index % 4)),
+  );
+
+  const renderRepeated = async (): Promise<string> => {
+    const input = await inputFor('degraded-flight.bin', { findings: twentyFour });
+    return renderMarkdown(buildReport(input));
+  };
+
+  it('states the repetition once instead of leaving it to be counted', async () => {
+    const markdown = await renderRepeated();
+
+    expect(markdown).toContain('24 occurrences');
+    // Index row: one line standing for all twenty-four.
+    expect(markdown).toContain('| `analysis:attitude-tracking-error` | WARNING |');
+  });
+
+  it('reports the largest value any occurrence recorded, and says which one', async () => {
+    const markdown = await renderRepeated();
+
+    // 0.1 + 23/100 — the last occurrence's own measurement, selected rather than derived.
+    expect(markdown).toContain('Peak RMS tracking error: 0.33 rad (finding `finding:pitch:23`)');
+  });
+
+  it('states the shared criterion once rather than twenty-four times', async () => {
+    const markdown = await renderRepeated();
+    const criterionLines = markdown
+      .split('\n')
+      .filter((line) => line.startsWith('- RMS tracking error criterion:'));
+
+    expect(criterionLines).toHaveLength(1);
+    expect(markdown).toContain('Thresholds, identical for every occurrence below:');
+  });
+
+  it('still prints every occurrence with its own evidence', async () => {
+    // The grouping must not be a summary that replaces the findings. Each of the 24 is a separate
+    // evidenced claim (doc 03 §3) and all 24 remain auditable in the document.
+    const markdown = await renderRepeated();
+
+    for (const finding of twentyFour) {
+      expect(markdown, `${finding.id} is missing from the report`).toContain(finding.id);
+    }
+    // One occurrence heading per finding — the group did not swallow any of them.
+    expect(markdown.split('\n').filter((line) => line.startsWith('#### t ='))).toHaveLength(24);
+  });
+
+  it('prints no total across the occurrences', async () => {
+    const markdown = await renderRepeated();
+    const total = twentyFour.reduce(
+      (sum, finding) => sum + (finding.measurements[0]?.value ?? 0),
+      0,
+    );
+
+    // The one number a rollup is tempted to add. It is not in the artifacts, so it is not in the
+    // report — see rollup.ts for why it would belong in @pandalog/analysis if it were wanted.
+    expect(markdown).not.toContain(String(total));
+    expect(markdown).not.toContain(String(Number.parseFloat(total.toPrecision(6))));
+  });
+
+  it('states a shared criterion once where repeating it would cost 23 blocks', async () => {
+    // A differential test rather than a line-count guess. The same 24 findings are rendered twice:
+    // once judged against one criterion, once against 24 subtly different ones. Only the first can
+    // hoist, so the difference between them is exactly what hoisting saves — and it is measured
+    // rather than asserted from a number somebody picked.
+    const shared = await renderRepeated();
+
+    const perOccurrenceCriteria = twentyFour.map((finding, index) =>
+      createFinding({
+        ...finding,
+        thresholds: [
+          {
+            label: 'RMS tracking error criterion',
+            value: 0.0873 + index / 1000,
+            unit: 'rad',
+            basis: 'provisional',
+          },
+        ],
+      }),
+    );
+    const unshared = renderMarkdown(
+      buildReport(await inputFor('degraded-flight.bin', { findings: perOccurrenceCriteria })),
+    );
+
+    const lines = (markdown: string): number => markdown.split('\n').length;
+
+    expect(lines(shared)).toBeLessThan(lines(unshared));
+    expect(lines(unshared) - lines(shared)).toBe(23 * 4);
   });
 });

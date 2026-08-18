@@ -25,4 +25,7 @@ export type {
   RequirementSetIdentity,
 } from './document.js';
 
+export { groupFindings, isRepeated } from './rollup.js';
+export type { FindingGroup, GroupPeak } from './rollup.js';
+
 export { renderMarkdown } from './markdown.js';

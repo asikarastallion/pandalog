@@ -136,6 +136,16 @@ describe('the state model (doc 01 §4)', () => {
 });
 
 describe('selecting a finding reaches its evidence (Phase H acceptance)', () => {
+  /**
+   * The row for a given finding, found by what it says rather than by where it sits.
+   *
+   * The list groups by rule and severity, so a row's index is not its finding's index in flight
+   * order. Asserting on position would be asserting on the grouping, which is presentation and
+   * free to change; asserting on the statement is asserting on the thing the click is about.
+   */
+  const rowFor = (list: ReturnType<typeof mount>, statement: string) =>
+    list.findAll('button.entry').find((button) => button.text().includes(statement));
+
   it('emits the finding id that was clicked', async () => {
     const workspace = createWorkspace();
     workspace.setResult('degraded-flight.bin', result);
@@ -148,15 +158,26 @@ describe('selecting a finding reaches its evidence (Phase H acceptance)', () => 
       },
     });
 
-    await list.findAll('button.entry')[1]?.trigger('click');
+    const target = workspace.findings.value[1]?.finding;
+    if (target === undefined) {
+      throw new Error('The fixture no longer raises more than one finding.');
+    }
 
-    const emitted = list.emitted('select');
-    expect(emitted?.[0]).toEqual([workspace.findings.value[1]?.finding.id]);
+    await rowFor(list, target.statement)?.trigger('click');
+
+    expect(list.emitted('select')?.[0]).toEqual([target.id]);
   });
 
   it('opens the clicked finding’s window, not the one that was open before', async () => {
     const workspace = createWorkspace();
     workspace.setResult('degraded-flight.bin', result);
+
+    const [first, second] = workspace.findings.value;
+    if (first === undefined || second === undefined) {
+      throw new Error('The fixture no longer raises more than one finding.');
+    }
+    workspace.selectFinding(first.finding.id);
+    const before = workspace.investigation.value?.evidenceWindow;
 
     const list = mount(FindingsList, {
       props: {
@@ -166,11 +187,27 @@ describe('selecting a finding reaches its evidence (Phase H acceptance)', () => 
       },
     });
 
-    const before = workspace.investigation.value?.evidenceWindow;
-    await list.findAll('button.entry')[2]?.trigger('click');
+    await rowFor(list, second.finding.statement)?.trigger('click');
     workspace.selectFinding(String(list.emitted('select')?.[0]?.[0]));
 
+    expect(before).toBeDefined();
     expect(workspace.investigation.value?.evidenceWindow).not.toEqual(before);
+  });
+
+  it('shows every finding the flight raised, whatever order it groups them in', () => {
+    // The grouping changed the order; it must not have changed the contents.
+    const workspace = createWorkspace();
+    workspace.setResult('degraded-flight.bin', result);
+
+    const list = mount(FindingsList, {
+      props: {
+        findings: workspace.findings.value,
+        selectedId: null,
+        notApplicableRuleIds: [],
+      },
+    });
+
+    expect(list.findAll('button.entry')).toHaveLength(result.findings.length);
   });
 
   it('renders the evidence window and the cited signals in the panel', () => {

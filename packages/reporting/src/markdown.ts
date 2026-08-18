@@ -11,11 +11,18 @@
  * basis, and an unrecorded quantity is printed as "not recorded" rather than as a blank cell that
  * reads like a zero.
  */
-import type { EvidenceRef, Finding, Hypothesis } from '@pandalog/analysis';
+import {
+  evidenceTimeSpan,
+  type EvidenceRef,
+  type Finding,
+  type Hypothesis,
+  type ThresholdRecord,
+} from '@pandalog/analysis';
 import type { ComparisonReport, ComparisonVerdict } from '@pandalog/comparison';
 import type { VerificationResult } from '@pandalog/verification';
 
 import type { ReportDocument } from './document.js';
+import { groupFindings, isRepeated, type FindingGroup } from './rollup.js';
 import { code, formatNumber, formatQuantity, formatWindow, orNotLogged, table } from './format.js';
 
 const section = (heading: string, body: string): string => `## ${heading}\n\n${body}`;
@@ -34,8 +41,44 @@ function renderEvidence(reference: EvidenceRef): string {
   }
 }
 
-function renderFinding(finding: Finding): string {
-  const lines = [`### ${code(finding.ruleId)} — ${finding.severity}`, '', finding.statement, ''];
+/** One threshold line. The basis is never optional (doc 03 §4). */
+const renderThreshold = (threshold: ThresholdRecord): string =>
+  `- ${threshold.label}: ${formatQuantity(threshold.value, threshold.unit)} ` +
+  `(basis ${code(threshold.basis)})`;
+
+/**
+ * Whether every finding in a group was judged against identical thresholds.
+ *
+ * When they were, the criteria are stated once for the group instead of twenty-four times. That is
+ * a de-duplication of text, not of substance: if any occurrence were judged differently this
+ * returns false and each one prints its own, because a reader must never have to assume that the
+ * criterion in front of them is the one that produced the finding below it.
+ */
+function sharedThresholds(group: FindingGroup): readonly ThresholdRecord[] | null {
+  const [first, ...rest] = group.findings;
+  if (first === undefined || first.thresholds.length === 0) {
+    return null;
+  }
+  const shape = (finding: Finding): string => JSON.stringify(finding.thresholds);
+  const reference = shape(first);
+  return rest.every((finding) => shape(finding) === reference) ? first.thresholds : null;
+}
+
+/**
+ * One occurrence, under a group heading that already named the rule and severity.
+ *
+ * `hoistedThresholds` is true when the group printed the criteria once above; the occurrence then
+ * omits them rather than repeating an identical block.
+ */
+function renderOccurrence(finding: Finding, hoistedThresholds: boolean): string {
+  const span = evidenceTimeSpan(finding.evidence);
+  const heading = `#### ${span === null ? code(finding.id) : formatWindow(span.startSeconds, span.endSeconds)}`;
+  return [heading, '', renderBody(finding, hoistedThresholds)].join('\n');
+}
+
+/** Statement, measurements, thresholds and evidence — the substance, without a heading. */
+function renderBody(finding: Finding, hoistedThresholds: boolean): string {
+  const lines = [finding.statement, ''];
 
   if (finding.measurements.length > 0) {
     lines.push('Measurements:', '');
@@ -45,15 +88,10 @@ function renderFinding(finding: Finding): string {
     lines.push('');
   }
 
-  if (finding.thresholds.length > 0) {
+  if (!hoistedThresholds && finding.thresholds.length > 0) {
     lines.push('Thresholds:', '');
     for (const threshold of finding.thresholds) {
-      // The basis is never optional here. A threshold printed alone reads as a settled criterion,
-      // and every threshold in this repository is provisional (doc 03 §4).
-      lines.push(
-        `- ${threshold.label}: ${formatQuantity(threshold.value, threshold.unit)} ` +
-          `(basis ${code(threshold.basis)})`,
-      );
+      lines.push(renderThreshold(threshold));
     }
     lines.push('');
   }
@@ -62,9 +100,100 @@ function renderFinding(finding: Finding): string {
   for (const reference of finding.evidence) {
     lines.push(`- ${renderEvidence(reference)}`);
   }
-  lines.push('', `Rule ${code(finding.ruleId)} version ${code(finding.ruleVersion)}.`);
+  lines.push(
+    '',
+    `Finding ${code(finding.id)}, rule ${code(finding.ruleId)} version ${code(finding.ruleVersion)}.`,
+  );
 
   return lines.join('\n');
+}
+
+/**
+ * A group of findings the same rule raised about the same signals at the same severity.
+ *
+ * Every occurrence is still printed in full underneath — doc 03 §3 makes each one a separate
+ * evidenced claim and a report that summarised them away would be a report you cannot audit. What
+ * the group adds is a way in: how many, over what span, and the largest value any of them recorded.
+ *
+ * There is no total. A summed duration is a quantity no Finding asserts (doc 04 §7); see
+ * `rollup.ts` for why that belongs in `@pandalog/analysis` if it is ever wanted.
+ */
+function renderGroup(group: FindingGroup): string {
+  const heading =
+    group.signalIds.length === 0
+      ? `### ${code(group.ruleId)} — ${group.severity}`
+      : `### ${code(group.ruleId)} — ${group.severity} — ${group.signalIds.map(code).join(', ')}`;
+
+  // A group of one is a finding, not a group. A per-occurrence sub-heading under a heading that
+  // already identifies it would add a level of structure carrying no information.
+  const [only] = group.findings;
+  if (!isRepeated(group)) {
+    return only === undefined ? heading : [heading, '', renderBody(only, false)].join('\n');
+  }
+
+  const lines = [heading, ''];
+
+  lines.push(
+    `${formatNumber(group.count)} occurrences` +
+      (group.firstSeconds === null || group.lastSeconds === null
+        ? ''
+        : `, ${formatWindow(group.firstSeconds, group.lastSeconds)}`) +
+      '. Each is a separate finding with its own evidence, listed below.',
+    '',
+  );
+
+  if (group.peaks.length > 0) {
+    lines.push('Largest value recorded across these occurrences:', '');
+    for (const peak of group.peaks) {
+      lines.push(
+        `- ${peak.label}: ${formatQuantity(peak.value, peak.unit)} ` +
+          `(finding ${code(peak.findingId)})`,
+      );
+    }
+    lines.push('');
+  }
+
+  const hoisted = sharedThresholds(group);
+  if (hoisted !== null) {
+    lines.push('Thresholds, identical for every occurrence below:', '');
+    for (const threshold of hoisted) {
+      lines.push(renderThreshold(threshold));
+    }
+    lines.push('');
+  }
+
+  lines.push(`Rule ${code(group.ruleId)} version ${code(only?.ruleVersion ?? '')}.`, '');
+  lines.push(
+    group.findings.map((finding) => renderOccurrence(finding, hoisted !== null)).join('\n\n'),
+  );
+
+  return lines.join('\n');
+}
+
+/**
+ * The index an engineer scans before reading anything.
+ *
+ * Every column is a tally or a selection from the findings themselves — no column is derived.
+ */
+function renderGroupIndex(groups: readonly FindingGroup[]): string {
+  return table(
+    ['Rule', 'Severity', 'Signals', 'Occurrences', 'Span', 'Largest recorded'],
+    groups.map((group) => [
+      code(group.ruleId),
+      group.severity,
+      group.signalIds.length === 0 ? '—' : group.signalIds.map(code).join(', '),
+      formatNumber(group.count),
+      group.firstSeconds === null || group.lastSeconds === null
+        ? 'not time-bounded'
+        : formatWindow(group.firstSeconds, group.lastSeconds),
+      group.peaks.length === 0
+        ? 'no measurement recorded'
+        : group.peaks
+            .map((peak) => `${peak.label} ${formatQuantity(peak.value, peak.unit)}`)
+            .join('; '),
+    ]),
+    'No findings to index.',
+  );
 }
 
 function renderHypothesis(hypothesis: Hypothesis): string {
@@ -157,6 +286,7 @@ function renderComparison(comparison: ComparisonReport): string {
 /** Render a report document as Markdown. */
 export function renderMarkdown(document: ReportDocument): string {
   const { provenance, counts } = document;
+  const findingGroups = groupFindings(document.findings);
 
   const sections: string[] = [
     `# ${document.title}`,
@@ -224,7 +354,16 @@ export function renderMarkdown(document: ReportDocument): string {
       document.findings.length === 0
         ? 'This flight raised no findings. That is not a statement that nothing was wrong — it ' +
             'means no registered rule found a condition it was written to detect.'
-        : document.findings.map(renderFinding).join('\n\n'),
+        : [
+            renderGroupIndex(findingGroups),
+            '',
+            'Findings are grouped by rule, severity and the signals their evidence names. Grouping ' +
+              'is presentation only: every finding below is the one the analysis produced, with ' +
+              'its own evidence, and no figure here is a total — a summed quantity would be a ' +
+              'measurement no finding asserts (doc 04 §7).',
+            '',
+            findingGroups.map(renderGroup).join('\n\n'),
+          ].join('\n'),
     ),
   ];
 

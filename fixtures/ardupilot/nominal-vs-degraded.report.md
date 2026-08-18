@@ -36,7 +36,15 @@ Verification against `pandalog-provisional` version `1.0.0`, source `provisional
 
 ## Findings
 
-### `analysis:attitude-tracking-error` — WARNING
+| Rule | Severity | Signals | Occurrences | Span | Largest recorded |
+| --- | --- | --- | --- | --- | --- |
+| `analysis:attitude-tracking-error` | WARNING | `attitude.roll`, `attitude.roll.desired`, `attitude.roll.error.rms` | 1 | t = 2.5 s to 7.4 s | Exceedance duration 4.9 s; Peak RMS tracking error 0.174533 rad |
+| `analysis:gps-availability` | WARNING | `gps.fix_type` | 1 | t = 3 s to 5.8 s | Fix loss duration 2.8 s |
+| `analysis:vibration-level` | WARNING | `vibration.magnitude`, `vibration.x`, `vibration.y`, `vibration.z` | 1 | t = 1 s to 2.9 s | Excursion duration 1.9 s; Peak vibration magnitude 43.3013 m/s^2 |
+
+Findings are grouped by rule, severity and the signals their evidence names. Grouping is presentation only: every finding below is the one the analysis produced, with its own evidence, and no figure here is a total — a summed quantity would be a measurement no finding asserts (doc 04 §7).
+
+### `analysis:attitude-tracking-error` — WARNING — `attitude.roll`, `attitude.roll.desired`, `attitude.roll.error.rms`
 
 Roll tracking exceeded the configured criterion (peak RMS error 0.1745 rad against a 0.0873 rad criterion) for 4.90 s. The criterion is provisional and is not traceable to a flight-test requirement.
 
@@ -59,9 +67,9 @@ Evidence:
 - signal `attitude.roll.desired`, t = 2.5 s to 7.4 s
 - measurement on `attitude.roll.error.rms` at 7.4 s: 0.174533 rad
 
-Rule `analysis:attitude-tracking-error` version `1.0.0`.
+Finding `analysis:attitude-tracking-error:roll@2.500000#0`, rule `analysis:attitude-tracking-error` version `1.0.0`.
 
-### `analysis:gps-availability` — WARNING
+### `analysis:gps-availability` — WARNING — `gps.fix_type`
 
 GPS fix was lost for 2.80 s, exceeding the tolerated maximum of 2 s. The tolerance is provisional and is not traceable to a flight-test requirement.
 
@@ -79,9 +87,9 @@ Evidence:
 - signal `gps.fix_type`, t = 3 s to 5.8 s
 - measurement on `gps.fix_type` at 3 s: 1 unitless
 
-Rule `analysis:gps-availability` version `1.0.0`.
+Finding `analysis:gps-availability@3.000000#0`, rule `analysis:gps-availability` version `1.0.0`.
 
-### `analysis:vibration-level` — WARNING
+### `analysis:vibration-level` — WARNING — `vibration.magnitude`, `vibration.x`, `vibration.y`, `vibration.z`
 
 Vibration magnitude peaked at 43.30 m/s^2 against a 30 m/s^2 criterion, sustained for 1.90 s. The criterion is provisional and airframe-independent.
 
@@ -103,7 +111,7 @@ Evidence:
 - signal `vibration.z`, t = 1 s to 2.9 s
 - measurement on `vibration.magnitude` at 1 s: 43.3013 m/s^2
 
-Rule `analysis:vibration-level` version `1.0.0`.
+Finding `analysis:vibration-level@1.000000#0`, rule `analysis:vibration-level` version `1.0.0`.
 
 ## Verification
 
