@@ -184,6 +184,7 @@
         "@pandalog/analysis",
         "@pandalog/verification",
         "@pandalog/pipeline",
+        "@pandalog/comparison",
         "@pandalog/reporting"
       ],
       "platformNeutral": false,

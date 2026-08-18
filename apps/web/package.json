@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@pandalog/analysis": "workspace:*",
+    "@pandalog/comparison": "workspace:*",
     "@pandalog/core-domain": "workspace:*",
     "@pandalog/events": "workspace:*",
     "@pandalog/pipeline": "workspace:*",

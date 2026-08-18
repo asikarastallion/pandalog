@@ -11,7 +11,13 @@
  */
 import { computed } from 'vue';
 
-import { VIEWS, type ViewId } from '../workspace/navigation.js';
+import {
+  GROUP_LABELS,
+  VIEWS,
+  VIEW_GROUPS,
+  viewsInGroup,
+  type ViewId,
+} from '../workspace/navigation.js';
 
 const props = defineProps<{
   activeView: ViewId;
@@ -49,28 +55,40 @@ const badgeFor = (id: ViewId): number | null => {
 
       <p class="file" :title="fileName">{{ fileName }}</p>
 
-      <ul>
-        <li v-for="view in VIEWS" :key="view.id">
-          <button
-            type="button"
-            class="tab"
-            :class="{ current: view.id === activeView }"
-            :aria-current="view.id === activeView ? 'page' : undefined"
-            :title="view.question"
-            @click="emit('show', view.id)"
-          >
-            <span class="glyph" aria-hidden="true">{{ view.glyph }}</span>
-            <span class="rail-label">{{ view.label }}</span>
-            <span
-              v-if="badgeFor(view.id) !== null"
-              class="badge"
-              :class="{ alarm: view.id === 'verification' }"
+      <!--
+        Grouped rather than flat. At nine entries a flat list makes every view look equally likely;
+        the headings say what kind of question each group answers, which is the rail's whole job.
+      -->
+      <nav
+        v-for="group in VIEW_GROUPS"
+        :key="group"
+        class="group"
+        :aria-label="GROUP_LABELS[group]"
+      >
+        <h3 class="group-label">{{ GROUP_LABELS[group] }}</h3>
+        <ul>
+          <li v-for="view in viewsInGroup(group)" :key="view.id">
+            <button
+              type="button"
+              class="tab"
+              :class="{ current: view.id === activeView }"
+              :aria-current="view.id === activeView ? 'page' : undefined"
+              :title="view.question"
+              @click="emit('show', view.id)"
             >
-              {{ badgeFor(view.id) }}
-            </span>
-          </button>
-        </li>
-      </ul>
+              <span class="glyph" aria-hidden="true">{{ view.glyph }}</span>
+              <span class="rail-label">{{ view.label }}</span>
+              <span
+                v-if="badgeFor(view.id) !== null"
+                class="badge"
+                :class="{ alarm: view.id === 'verification' }"
+              >
+                {{ badgeFor(view.id) }}
+              </span>
+            </button>
+          </li>
+        </ul>
+      </nav>
     </nav>
 
     <main class="stage">
@@ -129,6 +147,22 @@ const badgeFor = (id: ViewId): number | null => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.group {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.group-label {
+  margin: 0.4rem 0 0.1rem;
+  padding: 0 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-dim);
+  opacity: 0.75;
 }
 
 .rail ul {
@@ -223,6 +257,22 @@ const badgeFor = (id: ViewId): number | null => {
   .rail {
     border-right: none;
     border-bottom: 1px solid var(--border);
+  }
+
+  .group {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .group-label {
+    margin: 0.4rem 0 0.1rem;
+    padding: 0 0.45rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-dim);
+    opacity: 0.75;
   }
 
   .rail ul {

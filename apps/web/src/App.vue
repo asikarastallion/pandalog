@@ -25,7 +25,10 @@ import ReportView from './views/ReportView.vue';
 import SummaryView from './views/SummaryView.vue';
 import VerificationView from './views/VerificationView.vue';
 import WorkspaceShell from './views/WorkspaceShell.vue';
+import ComparisonView from './views/ComparisonView.vue';
+import ProvenanceView from './views/ProvenanceView.vue';
 import { createDefaultPipelineClient, type PipelineClient } from './workers/client.js';
+import { baselineCandidates, runComparison, type ComparisonState } from './workspace/comparison.js';
 import { LogTooLargeError, MAX_LOG_BYTES, tooLargeMessage } from './workspace/failure.js';
 import {
   createAvailableLogStore,
@@ -46,6 +49,40 @@ const client = ref<PipelineClient | null>(null);
 function pipeline(): PipelineClient {
   client.value ??= createDefaultPipelineClient();
   return client.value;
+}
+
+/**
+ * The open comparison, if any.
+ *
+ * Reset whenever a different log is opened: a verdict about the previous flight left on screen
+ * beside a new one would be read as being about the new one.
+ */
+const comparison = ref<ComparisonState>({ status: 'idle' });
+
+const comparisonCandidates = computed(() =>
+  baselineCandidates(recent.value, workspace.result.value?.dataset.provenance.sha256 ?? null),
+);
+
+async function compareAgainst(sha256: string): Promise<void> {
+  const subject = workspace.result.value;
+  if (subject === null) {
+    return;
+  }
+
+  comparison.value = { status: 'running', baselineSha256: sha256 };
+  comparison.value = await runComparison({
+    subject,
+    subjectLabel: subject.dataset.provenance.fileName,
+    baselineSha256: sha256,
+    store,
+    // The same Worker the open log went through, so the baseline is analysed by the same code.
+    run: async (fileName, bytes) =>
+      pipeline().analyse(
+        fileName,
+        bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+      ),
+    now: () => new Date(),
+  });
 }
 
 async function refreshRecent(): Promise<void> {
@@ -84,6 +121,8 @@ async function analyse(fileName: string, bytes: ArrayBuffer, remember: boolean):
     const forStorage = remember ? bytes.slice(0) : null;
 
     const result = await pipeline().analyse(fileName, bytes);
+    // A verdict about the previous flight must not survive into this one.
+    comparison.value = { status: 'idle' };
     workspace.setResult(fileName, result);
 
     if (forStorage !== null) {
@@ -274,6 +313,20 @@ const showsTransport = computed(
       <VerificationView
         v-else-if="workspace.activeView.value === 'verification'"
         :verification="result.verification"
+      />
+
+      <ComparisonView
+        v-else-if="workspace.activeView.value === 'comparison'"
+        :candidates="comparisonCandidates"
+        :state="comparison"
+        :storage-available="storageAvailable"
+        @compare="compareAgainst"
+      />
+
+      <ProvenanceView
+        v-else-if="workspace.activeView.value === 'provenance'"
+        :result="result"
+        :flight-window="workspace.flightWindow.value"
       />
 
       <ReportView v-else-if="workspace.activeView.value === 'report'" :result="result" />

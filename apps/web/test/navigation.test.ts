@@ -10,10 +10,19 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 
 import WorkspaceShell from '../src/views/WorkspaceShell.vue';
-import { DEFAULT_VIEW, isViewId, VIEWS, viewById, VIEW_IDS } from '../src/workspace/navigation.js';
+import {
+  DEFAULT_VIEW,
+  GROUP_LABELS,
+  isViewId,
+  VIEWS,
+  VIEW_GROUPS,
+  VIEW_IDS,
+  viewById,
+  viewsInGroup,
+} from '../src/workspace/navigation.js';
 
 describe('the view set', () => {
-  it('is exactly the seven doc 01 §5.1 names', () => {
+  it('names the views doc 01 §5.1 defines, in rail order', () => {
     expect([...VIEW_IDS]).toEqual([
       'summary',
       'plot',
@@ -21,7 +30,9 @@ describe('the view set', () => {
       'playback',
       'investigation',
       'verification',
+      'comparison',
       'report',
+      'provenance',
     ]);
   });
 
@@ -30,6 +41,28 @@ describe('the view set', () => {
     for (const view of VIEWS) {
       expect(view.question.trim().length, view.id).toBeGreaterThan(10);
       expect(view.question.trim().endsWith('?') || view.id === 'report', view.id).toBe(true);
+    }
+  });
+
+  it('reaches the comparison package, which had no surface at all before', () => {
+    // packages/comparison shipped complete in Phase J and was callable from nowhere; the manifest
+    // meanwhile described this app as providing a comparison view (ADR-0016 amendment).
+    expect(VIEW_IDS).toContain('comparison');
+  });
+
+  it('puts every view in exactly one group', () => {
+    for (const view of VIEWS) {
+      expect(VIEW_GROUPS, view.id).toContain(view.group);
+    }
+    expect(VIEWS.length).toBe(
+      VIEW_GROUPS.reduce((total, group) => total + viewsInGroup(group).length, 0),
+    );
+  });
+
+  it('leaves no group empty, so the rail never shows a heading over nothing', () => {
+    for (const group of VIEW_GROUPS) {
+      expect(viewsInGroup(group).length, group).toBeGreaterThan(0);
+      expect(GROUP_LABELS[group].length, group).toBeGreaterThan(0);
     }
   });
 
@@ -125,5 +158,42 @@ describe('the navigation rail', () => {
     await wrapper.find('nav button.close').trigger('click');
 
     expect(wrapper.emitted('close')).toBeTruthy();
+  });
+});
+
+/**
+ * The two views this rail gained, and why each earns its place.
+ *
+ * A tab is a claim that the product answers a question. Adding one for a capability that does not
+ * exist is how a tool acquires empty screens, so both of these are checked against something real:
+ * Comparison against the package it calls, Log info against the provenance block it renders.
+ */
+describe('the views added to the rail', () => {
+  it('renders a Comparison entry the rail can reach', () => {
+    const wrapper = mount(WorkspaceShell, {
+      props: { activeView: 'summary', fileName: 'x.bin', findingCount: 0, failCount: 0 },
+    });
+
+    expect(wrapper.text()).toContain('Comparison');
+    expect(wrapper.text()).toContain('Log info');
+  });
+
+  it('shows the group headings, so nine entries are not one undifferentiated list', () => {
+    const wrapper = mount(WorkspaceShell, {
+      props: { activeView: 'summary', fileName: 'x.bin', findingCount: 0, failCount: 0 },
+    });
+
+    for (const group of VIEW_GROUPS) {
+      expect(wrapper.text()).toContain(GROUP_LABELS[group]);
+    }
+  });
+
+  it('adds no tab for a capability the canonical model cannot support', () => {
+    // ArduLog offers FFT and PID-tuning tabs. The canonical model carries IMU signals but no
+    // frequency transform, and no PID term at all — packages/parser-ardupilot's catalogue has no
+    // PIDR/PIDP/PIDY mapping. A tab for either would be a permanently empty screen claiming a
+    // capability that does not exist (doc 04 §12), so neither is here until the data is.
+    expect(VIEW_IDS).not.toContain('fft');
+    expect(VIEW_IDS).not.toContain('pid');
   });
 });

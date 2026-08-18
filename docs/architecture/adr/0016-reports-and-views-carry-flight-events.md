@@ -91,3 +91,32 @@ performed in colour instead of in numbers.
 **Ship a mode-number table anyway, keyed on "probably a copter".** Most ArduPilot logs in this
 domain are multirotors, so it would be right most of the time and silently wrong the rest — a
 failure mode indistinguishable from correctness for the reader.
+
+---
+
+## Amendment, same date — `apps/web` may depend on `@pandalog/comparison`
+
+Doc 05 Phase J delivered `@pandalog/comparison` complete and well tested (97% statement coverage,
+seven injected defects caught). It was reachable from nowhere. It appeared in neither `apps/web`'s
+`allowedDependencies` nor the CLI's, and `dependency-layers.json` described `apps/web` as providing
+a "comparison" view that did not exist.
+
+That is not a missing feature so much as an inconsistency between the manifest and the code, and
+doc 04 §11 says code-says-A/docs-say-B is not an acceptable interim state. `apps/web` gains
+`@pandalog/comparison`.
+
+The dependency direction is unchanged — comparison is layer 9, `apps/web` is layer 11 — and
+`apps/web` already reached the package's *types* transitively through `@pandalog/reporting`, which
+embeds a `ComparisonReport`. What changes is that the app may now call `compareFlights`.
+
+**No new capability is introduced by the view.** `compareFlights` is the same deterministic function
+the CLI would call and the tests already exercise; the view selects two analysed logs and renders
+its output, including `INCOMPARABLE`, which ADR-0012 makes a first-class answer for exactly the
+reason `INCONCLUSIVE` is one in verification. A comparison view that showed `INCOMPARABLE` as "no
+difference" would undo that decision in the one place a user actually reads it.
+
+**Comparison runs over two logs the browser has already stored.** Both flights are re-run through
+the pipeline from their stored bytes, the way reopening a single log already works, rather than
+caching a `ComparisonReport` — doc 03 §6 guarantees the re-run is byte-identical, and it keeps the
+comparison a statement about what the code currently concludes rather than about what some earlier
+version concluded.
